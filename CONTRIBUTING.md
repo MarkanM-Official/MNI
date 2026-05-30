@@ -21,13 +21,14 @@ Open `http://127.0.0.1:5000/admin`.
 
 - Keep changes focused.
 - Do not commit `.env`, local databases, generated logs, `node_modules`, or real API keys.
+- Contributions are submitted under the Apache License 2.0 unless explicitly stated otherwise.
 - Include screenshots for UI changes.
 - Add or update tests when touching auth, admin APIs, data agents, or platform webhooks.
 - Run basic checks before opening a PR:
 
 ```bash
 python -m compileall backend database scripts
-python test_admin_api.py
+pytest
 ```
 
 ## Security

@@ -321,8 +321,8 @@ git grep -n "YOUR_REAL_SECRET_OR_TOKEN" || true
 
 Use environment variables, ignored local files, or the admin secret store for real keys.
 
-## Licensing
+## License
 
-This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for the full license text.
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for the full license text and [NOTICE](NOTICE) for project attribution notices.
 
 Copyright (c) 2026 Raj Singh, founder of MarkanM, and MNI Automation Manager contributors.
