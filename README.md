@@ -1,69 +1,98 @@
 # MNI Automation Manager
 
-MNI Automation Manager is an open-source control panel for running an AI assistant across chat platforms, admin workflows, local knowledge, and external automations.
+MNI Automation Manager is an open-source admin panel for running an AI automation system from one place.
 
-Created by Raj Singh, founder of MarkanM.
+It helps you connect chat platforms, manage AI provider keys, review conversations, control users, add local knowledge, send email, create Google Meet links, expose your own MNI API, and trigger n8n workflows without digging through backend files.
 
-Short description for GitHub:
+Created by **Raj Singh**, founder of **MarkanM**.
+
+## GitHub Description
 
 ```text
-MNI Automation Manager is an open-source AI automation dashboard for Telegram, Discord, WhatsApp, Instagram, Google Meet, email, local knowledge, and n8n workflows. Built by Raj Singh, founder of MarkanM.
+Open-source AI automation manager for bots, APIs, n8n workflows, Google Meet, email, users, logs, and local knowledge.
 ```
 
-## What Runs Where
+## What MNI Can Do
 
-- `backend/app.py` starts the Flask API, creates database tables, seeds default config, and registers routes.
-- `admin/templates/login.html` and `admin/templates/dashboard.html` are the connected admin GUI.
-- `backend/routes/admin.py` powers admin panels for RAG, API keys, users, platform bots, logs, outreach, data agents, and monitor views.
-- `backend/routes/chat.py` processes chat messages through moderation, local data, AI routing, and logging.
-- `backend/routes/platforms.py` receives Telegram, Discord, WhatsApp, and Instagram webhooks.
-- `bot/index.js` starts the Node bot layer for supported platform workers.
+- Manage Telegram, Discord, WhatsApp, and Instagram bot connections.
+- Add AI provider keys for text, image, voice, and video features.
+- Chat with MNI from the admin panel.
+- Store local knowledge and use it inside AI replies.
+- Create and manage data agents that watch/crawl useful sources.
+- Review conversations, users, moderation events, and blocked users.
+- Configure Google admin login with an allowed-email list.
+- Configure Google Meet automation.
+- Send email through SMTP and keep email logs.
+- Connect n8n using your own n8n URL, API key, webhook URL, and trigger keyword.
+- Generate MNI API keys and webhook URLs for websites, bots, tools, and n8n.
+- Run locally with SQLite or deploy with PostgreSQL.
+
+## Who This Is For
+
+MNI is for people who want a self-hosted AI control room:
+
+- creators running AI bots
+- founders testing automation ideas
+- small teams managing support or lead flows
+- developers who want an open backend they can customize
+- non-developers who need a simpler dashboard after setup
+
+## Project Structure
+
+```text
+backend/                 Flask API, auth, admin routes, chat routes, services
+admin/templates/          Login page and dashboard UI
+bot/                      Node bot workers for Telegram and Discord
+config/                   Default RAG prompt and Google auth example
+database/                 Database initialization helpers
+docs/                     Extra guides and workflow notes
+scripts/                  Local setup and utility scripts
+tests/                    Basic test coverage
+docker-compose.yml        Local Docker setup with optional n8n profile
+render.yaml               Render deployment blueprint
+```
 
 ## Quick Start
+
+From the project folder:
 
 ```bash
 python scripts/setup_local.py --install-deps --install-node
 python backend/app.py
 ```
 
-Open `http://localhost:5000/admin`.
+Open:
 
-On startup MNI automatically prepares first-run runtime files when missing:
+```text
+http://localhost:5000/admin
+```
 
-- `instance/`
-- local SQLite database tables
-- `.env` from `.env.example`
-- `config/google_auth.json` from `config/google_auth.example.json`
-- default config, local knowledge sources, and data agents
-
-On a fresh database the login page uses the default first-time unlock:
+Fresh install login:
 
 ```text
 username: admin
 password: admin@123@321
 ```
 
-After that, choose password login, Google button login, or password plus Google button.
+After the first unlock, set your permanent login method from the admin panel:
 
-## Feature Map
+- password only
+- Google login
+- password plus Google login
 
-- Admin UI: login, Google admin login, allowed emails, users, admins, settings, logs, and monitor chat.
-- AI: text chat, prompt/RAG, personalities, API provider routing, image, voice, and video tools when configured.
-- Channels: Telegram, Discord, WhatsApp, Instagram, platform bots, moderation, and outreach.
-- Content/data: local knowledge files, blogs/posts, data agents, forms, email logs, appointments, and availability.
-- Automations: n8n URL/API key/webhook setup, test triggers, and bot-trigger keywords.
-- Deployment: local SQLite, Render/Postgres, Docker, docker-compose, and ignored secret files.
+## What Happens on First Run
 
-## Google Admin Login
+MNI prepares the local runtime automatically when files are missing:
 
-For the login button, the admin enters these once in `Access & Login`:
+- creates `instance/`
+- creates local SQLite tables
+- creates `.env` from `.env.example`
+- creates `config/google_auth.json` from `config/google_auth.example.json`
+- seeds default config
+- seeds local knowledge sources
+- seeds data agents
 
-- Google OAuth Client ID
-- Allowed Google admin emails
-
-Users do not paste tokens every time. They click the Google button, choose their account, and the backend verifies the Google JWT before creating the MNI session. The email inside the verified token must match the allowlist, so unknown Google accounts cannot enter.
-
-Google Client Secret is not needed for the login button and must not be exposed in frontend code. Client Secret and Refresh Token are only for backend Google API features such as Meet automation.
+Runtime files are ignored by git so your local credentials and database do not get committed.
 
 ## Manual Setup
 
@@ -73,7 +102,7 @@ python -m venv .venv
 npm install
 cp .env.example .env
 cp config/google_auth.example.json config/google_auth.json
-MARKANM_DISABLE_BACKGROUND_WORKERS=true .venv/bin/python backend/app.py
+.venv/bin/python backend/app.py
 ```
 
 Start platform workers only after tokens are configured:
@@ -82,58 +111,50 @@ Start platform workers only after tokens are configured:
 node bot/index.js
 ```
 
-## Google Meet Automation
+For local Telegram use, the Flask backend can also run polling workers when background workers are enabled.
 
-You can configure Google Meet OAuth in either place:
+## Docker
 
-- Admin GUI: `Platform Integration` -> `Google Meet Automation`
-- Local ignored file: copy `config/google_auth.example.json` to `config/google_auth.json`
-
-The local `config/google_auth.json` file is git-ignored. Use a refresh token with:
-
-```text
-https://www.googleapis.com/auth/meetings.space.created
+```bash
+docker compose up --build
 ```
 
-After configuration, user messages such as "create a Google Meet" will call the Meet API and return a meeting link.
+Optional n8n service:
 
-Google Meet checklist:
+```bash
+docker compose --profile automation up --build
+```
 
-- Google Cloud project exists.
-- OAuth consent screen is configured.
-- OAuth Client ID and Client Secret are available.
-- Refresh Token has the Meet create scope.
-- Deployment origin/redirect settings match where MNI runs.
-- MNI `Connect Apps` has Google Client ID, Client Secret, and Refresh Token saved.
+Open MNI at:
 
-## Email Automation
+```text
+http://localhost:5000/admin
+```
 
-MNI sends email through SMTP. Configure this in `Connect Apps` -> `Email Automation`:
+Open n8n at:
 
-- SMTP host and port
-- SMTP username
-- SMTP password or provider app password
-- From email
+```text
+http://localhost:5678
+```
 
-For Gmail, use an App Password. Normal account passwords usually fail.
+## Main Admin Sections
 
-## n8n Automations
+- **Home**: overview, stats, quick actions
+- **MNI Chat**: talk to your configured AI backend
+- **Access & Login**: password and Google admin login settings
+- **Connect Apps**: platform tokens, backend URL, Google Meet, email, database settings
+- **Automations**: n8n URL, API key, webhook URL, trigger keyword, test trigger
+- **AI Providers**: text/image/voice/video API keys and fallback routing
+- **AI Brain**: RAG prompt and knowledge behavior
+- **Channel Bots**: manage platform-specific bot entries
+- **Conversations**: review user messages and AI responses
+- **MNI API**: generate API keys and webhook URLs for external tools
 
-MNI supports a bring-your-own automation engine setup.
+## MNI API for n8n and External Tools
 
-1. Run self-hosted n8n or use n8n Cloud.
-2. Open `Access & Login` first and log in as admin.
-3. Open `Automations`.
-4. Add n8n Base URL, API key, default webhook URL, and trigger keyword.
-5. Use `Send Test Trigger` to verify the workflow.
+MNI can generate API keys for other apps.
 
-For Telegram, the configured keyword such as `/workflow` can trigger the default n8n webhook when the bot worker is running.
-
-## MNI API
-
-MNI can generate API keys for other tools, including n8n.
-
-Open `MNI API` in the admin drawer and create a client. Each client can be limited to specific powers:
+Open **MNI API** in the admin drawer and create a client. You can choose what that key is allowed to use:
 
 - chat
 - image generation
@@ -160,13 +181,89 @@ Example body:
 }
 ```
 
-MNI also gives each client a webhook URL:
+MNI also gives each API client a webhook URL:
 
 ```text
 POST /api/chat/webhook/<webhook_slug>
 ```
 
-Use the webhook URL when another app can send JSON but cannot set custom headers.
+Use the webhook URL when another tool can send JSON but cannot set custom headers.
+
+## n8n Integration
+
+n8n is the automation layer. MNI handles AI, bot logic, users, and admin state. n8n handles actions across external apps.
+
+Example workflows:
+
+- Telegram lead -> MNI -> n8n -> Google Sheet + email notification
+- User asks to book a meeting -> n8n checks calendar -> creates Meet link -> returns result
+- Support message -> n8n creates a ticket in Notion, Airtable, HubSpot, or another CRM
+- Admin chat -> Run n8n automation -> send payload to a workflow webhook
+
+Setup:
+
+1. Run self-hosted n8n or use n8n Cloud.
+2. Open MNI admin.
+3. Go to **Automations**.
+4. Add n8n Base URL.
+5. Add n8n API key.
+6. Add default webhook URL.
+7. Set a trigger keyword such as `/workflow`.
+8. Use **Send Test Trigger**.
+
+## Google Admin Login
+
+For Google login, the admin enters these once in **Access & Login**:
+
+- Google OAuth Client ID
+- allowed Google admin emails
+
+Users do not paste tokens each time. They click the Google button, choose their account, and the backend verifies the Google JWT. The email inside the verified token must match the allowlist.
+
+Google Client Secret is not needed for the login button. Do not put a client secret in frontend code.
+
+## Google Meet Automation
+
+Google Meet automation needs backend OAuth credentials:
+
+- Google OAuth Client ID
+- Google OAuth Client Secret
+- Google Refresh Token
+
+The refresh token should include:
+
+```text
+https://www.googleapis.com/auth/meetings.space.created
+```
+
+Checklist:
+
+- Google Cloud project exists.
+- OAuth consent screen is configured.
+- OAuth Client ID and Client Secret are created.
+- Refresh Token has the Meet create scope.
+- Deployment URL/origin matches Google Cloud settings.
+- MNI **Connect Apps** has the Google credentials saved.
+
+You can also use the ignored local file:
+
+```text
+config/google_auth.json
+```
+
+## Email Automation
+
+MNI sends email through SMTP.
+
+Configure in **Connect Apps**:
+
+- SMTP host
+- SMTP port
+- SMTP username
+- SMTP password or app password
+- From email
+
+For Gmail, use an App Password. Normal Gmail account passwords usually fail.
 
 ## Database
 
@@ -182,20 +279,51 @@ Production database:
 DATABASE_URL=postgresql://...
 ```
 
-Startup fallback order:
+Startup priority:
 
-1. `DATABASE_URL` or compatible env database URL
-2. Admin-saved deployment database URL
+1. `DATABASE_URL`
+2. admin-saved deployment database URL
 3. Render disk SQLite
-4. Local `instance/keli_ai.db`
+4. local SQLite
 
-Generated databases, logs, caches, `.env`, and `config/google_auth.json` are ignored.
+## Deployment
+
+MNI includes:
+
+- `Dockerfile`
+- `docker-compose.yml`
+- `render.yaml`
+- `RENDER_SETUP.md`
+
+For Render, PostgreSQL is recommended. Set `DATABASE_URL` in the Render service and let MNI create tables on startup.
 
 ## Open-Source Safety
 
-Before publishing, check:
+These files are ignored and should not be committed:
 
-- `.env` is not committed.
-- `config/google_auth.json` is not committed.
-- `instance/*.db`, logs, `__pycache__`, `.venv`, and `node_modules` are not committed.
-- Real keys are configured through env vars, admin UI, or ignored local files.
+```text
+.env
+config/google_auth.json
+instance/*.db
+instance/deployment_settings.json
+.venv/
+node_modules/
+__pycache__/
+*.log
+```
+
+Before publishing changes:
+
+```bash
+git status --short --ignored
+git grep -n "YOUR_REAL_SECRET_OR_TOKEN" || true
+```
+
+Use environment variables, ignored local files, or the admin secret store for real keys.
+
+## License
+
+MIT License.
+
+Copyright (c) 2026 Raj Singh, founder of MarkanM, and MNI Automation Manager contributors.
+
