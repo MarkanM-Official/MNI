@@ -1,0 +1,3938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MNI Automation Manager</title>
+<style>
+:root{--bg:#f4f2ee;--rail:#171717;--panel:#ffffff;--panel-2:#fbfaf7;--line:#d8d4ca;--line-2:#e7e2d8;--text:#22211f;--muted:#706b63;--soft:#9b9488;--accent:#0f766e;--accent-2:#b45309;--amber:#b45309;--danger:#b91c1c;--ok:#15803d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;height:100vh;background:var(--bg);font-family:Inter,'Segoe UI',system-ui,sans-serif;color:var(--text);overflow:hidden}
+.sidebar{width:282px;background:var(--rail);border-right:1px solid #2a2926;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:width .2s ease}
+.sidebar.collapsed{width:74px}
+.sidebar.closed{width:0;border-right:none;overflow:hidden}
+.brand{padding:16px 14px;border-bottom:1px solid #2a2926;display:flex;align-items:center;gap:10px}
+.brand-name{font-size:17px;font-weight:850;color:#f5f1e8;letter-spacing:0;white-space:nowrap}
+.brand-name::before{content:'M';display:inline-grid;place-items:center;width:32px;height:32px;margin-right:9px;border-radius:9px;background:#f5f1e8;color:#171717;font-size:15px;font-weight:900}
+.brand-sub{font-size:11px;color:#aaa197;margin-left:51px;line-height:1.4}
+.sidebar.collapsed .brand-name{font-size:0}.sidebar.collapsed .brand-name::before{margin-right:0}.sidebar.collapsed .brand-sub,.sidebar.collapsed .nav-sec,.sidebar.collapsed .drawer-stats,.sidebar.collapsed .logout-btn span{display:none}
+.sidebar.collapsed .ni{justify-content:center;font-size:0;padding:11px 8px}
+.sidebar.collapsed .ni .ico{font-size:13px;width:24px}
+.sidebar.collapsed .logout-btn{font-size:0}
+.sidebar.collapsed .logout-btn::before{content:'↪';font-size:14px}
+.nav-sec{font-size:10px;color:#8f877d;padding:18px 14px 6px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.ni{margin:2px 8px;padding:10px 10px;font-size:13px;cursor:pointer;color:#c7c0b6;border-radius:9px;display:flex;align-items:center;gap:10px;transition:background .15s,color .15s,border-color .15s;user-select:none}
+.ni:hover{background:#242321;color:#fff}
+.ni.active{background:#30302d;color:#fff;font-weight:750}
+.ni .ico{width:22px;text-align:center;font-size:12px;color:#d9d0c3;flex:0 0 auto}
+.nav-bottom{margin-top:auto;padding:14px;border-top:1px solid #2a2926}
+.logout-btn{width:100%;padding:10px;background:#242321;border:1px solid #393732;border-radius:9px;color:#d9d0c3;font-size:12px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{background:#302e2a;color:#fff}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;min-height:0}
+.topbar{padding:14px 24px;background:rgba(255,255,255,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-2);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:800;color:var(--text)}
+.topbar-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:6px;box-shadow:0 0 0 4px rgba(34,197,94,.12)}
+.admin-chip{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:#fff;white-space:nowrap}
+.content{flex:1;padding:26px;overflow-y:auto;min-height:0}
+.panel{display:none}
+.panel.active{display:block}
+#panel-monitor.api-focus .card:not(#monitor-developer-api-card){display:none}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);border-radius:14px;padding:20px;margin-bottom:20px;box-shadow:0 18px 45px rgba(60,50,35,.08)}
+.card-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;letter-spacing:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:#fff;border-radius:14px;padding:16px;border:1px solid var(--line-2);box-shadow:0 12px 28px rgba(60,50,35,.06)}
+.stat-val{font-size:30px;font-weight:850;color:var(--accent);line-height:1}
+.stat-label{font-size:11px;color:var(--muted);margin-top:8px;text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+label.field-label{display:block;font-size:11px;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.07em;font-weight:800}
+input,select,textarea{width:100%;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border .2s,box-shadow .2s;background-clip:padding-box;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(25,179,166,.14)}
+textarea{resize:vertical;min-height:120px;font-family:'SFMono-Regular','Consolas',monospace;font-size:12px;line-height:1.6}
+.field-group{margin-bottom:14px}
+.btn{padding:9px 15px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;border:none;transition:filter .15s,transform .15s,background .15s;letter-spacing:0;min-height:36px}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-sm{padding:6px 10px;font-size:12px;border-radius:7px;min-height:30px}
+.btn-danger{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.btn-danger:hover{background:#fecaca}
+.btn-success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.btn-success:hover{background:#bbf7d0}
+.btn-outline{background:#fff;color:#0f766e;border:1px solid #9bd8cc}
+.btn-outline:hover{background:#effdf8;color:#0b5f58}
+button:disabled{opacity:.45;cursor:not-allowed}
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line-2)}
+.toggle-wrap:last-child{border-bottom:none}
+.toggle-info .toggle-name{font-size:13px;font-weight:750;color:var(--text)}
+.toggle-info .toggle-desc{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:#e7e2d8;border-radius:999px;cursor:pointer;transition:background .2s;border:1px solid var(--line)}
+.toggle input:checked+.toggle-track{background:var(--accent);border-color:var(--accent)}
+.toggle-thumb{position:absolute;top:4px;left:4px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none}
+.toggle input:checked~.toggle-thumb{transform:translateX(18px)}
+.tag{display:inline-block;font-size:10px;font-weight:850;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+.tag-green{background:#0d2a1b;color:#bbf7d0}
+.tag-red{background:#35191c;color:#fecaca}
+.tag-blue{background:#10233b;color:#bfdbfe}
+.tag-amber{background:#34230d;color:#fde68a}
+.tag-purple{background:#112b2d;color:#a7f3d0}
+.table-wrap{overflow-x:auto;border:1px solid var(--line-2);border-radius:8px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+th{text-align:left;padding:11px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line-2);font-weight:850;background:#f7f4ee}
+td{padding:11px 12px;border-bottom:1px solid var(--line-2);color:var(--text);vertical-align:middle}
+tr:hover td{background:#fbfaf7}
+#toast{position:fixed;bottom:24px;right:24px;background:#0d2522;border:1px solid var(--accent);border-radius:8px;padding:12px 18px;font-size:13px;color:#ccfbf1;z-index:9999;transform:translateY(80px);transition:transform .3s;pointer-events:none;box-shadow:0 18px 60px rgba(0,0,0,.28)}
+#toast.show{transform:translateY(0)}
+.plat-card{background:#fff;border:1px solid var(--line-2);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 12px 28px rgba(60,50,35,.06)}
+.plat-card-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:5px}
+.plat-card-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.webhook-box{background:#f7fbff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'SFMono-Regular','Consolas',monospace;font-size:11px;color:#0f5c9c;display:flex;align-items:center;justify-content:space-between;word-break:break-all;gap:8px}
+.copy-btn{background:#fff;border:1px solid #9bd8cc;border-radius:7px;color:#0f766e;font-size:11px;padding:5px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.copy-btn:hover{background:#effdf8}
+.section-divider{height:1px;background:var(--line-2);margin:20px 0}
+.hero-panel{background:linear-gradient(135deg,#fffaf0,#effdf8);border:1px solid var(--line-2);border-radius:18px;padding:24px;margin-bottom:20px;color:#22211f}
+.hero-panel h2{font-size:28px;line-height:1.1;margin-bottom:8px}
+.hero-panel p{color:#667789;font-size:14px;line-height:1.6;max-width:780px}
+.task-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.task-card{background:#fff;border:1px solid var(--line-2);border-radius:14px;padding:16px;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;color:#22211f}
+.task-card:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(24,104,219,.10);border-color:#b9d4f8}
+.task-card b{display:block;font-size:15px;margin-bottom:6px}
+.task-card span{font-size:12px;color:#667789;line-height:1.45}
+.guide-hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:stretch;margin-bottom:20px}
+.guide-block{background:#fff;border:1px solid var(--line-2);border-radius:14px;padding:18px}
+.guide-kicker{font-size:11px;color:var(--accent);font-weight:850;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.guide-title{font-size:28px;font-weight:900;line-height:1.1;margin-bottom:10px}
+.guide-text{font-size:13px;color:var(--muted);line-height:1.65}
+.guide-list{display:grid;gap:10px;margin-top:14px}
+.guide-row{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-2);font-size:13px}
+.guide-row:last-child{border-bottom:none}
+.guide-label{color:var(--text);font-weight:800}
+.guide-value{color:var(--muted);line-height:1.5}
+.code-pill{font-family:'SFMono-Regular','Consolas',monospace;font-size:12px;color:#1868db;background:#eef6ff;border:1px solid #cfe4ff;border-radius:6px;padding:2px 6px;display:inline-block;margin:2px 0}
+.drawer-toggle{border:1px solid var(--line);background:#fff;border-radius:9px;min-width:36px;height:36px;font-size:17px;cursor:pointer;color:var(--text)}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.chart-bars{display:grid;gap:10px}
+.chart-row{display:grid;grid-template-columns:110px 1fr 42px;gap:10px;align-items:center;font-size:12px}
+.chart-track{height:10px;background:#eee8dd;border-radius:999px;overflow:hidden}
+.chart-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:999px;min-width:4px}
+.drawer-stats{margin:12px 12px 4px;padding:12px;border:1px solid #2f2d29;border-radius:12px;background:#20201d}
+.drawer-stats-title{font-size:11px;color:#f5f1e8;font-weight:800;margin-bottom:10px}
+.drawer-stat{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:center;margin:8px 0}
+.drawer-stat span{font-size:11px;color:#aaa197}
+.drawer-mini-track{height:7px;background:#34322e;border-radius:999px;overflow:hidden}
+.drawer-mini-fill{height:100%;background:linear-gradient(90deg,#14a38b,#f59e0b);border-radius:999px}
+.command-shell{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px;min-height:0}
+.command-chat-main{display:flex;flex-direction:column;min-height:0}
+.home-chat-card{background:#fff;border:1px solid var(--line-2);border-radius:18px;padding:16px;margin-bottom:20px;box-shadow:0 18px 45px rgba(60,50,35,.08)}
+.home-chat-row{display:flex;gap:10px;align-items:flex-end}
+.home-chat-row textarea{min-height:58px;border-radius:14px;font-size:14px;resize:none}
+.flow-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.flow-step{background:#fff;border:1px solid var(--line-2);border-radius:14px;padding:14px}
+.flow-step b{display:block;font-size:14px;margin-bottom:5px;color:var(--text)}
+.flow-step span{font-size:12px;line-height:1.5;color:var(--muted)}
+.chat-window{min-height:320px;max-height:none;flex:1;overflow:auto;background:#fff;border:1px solid var(--line-2);border-radius:16px;padding:18px}
+.chat-bubble{padding:12px 14px;border-radius:14px;margin-bottom:12px;white-space:pre-wrap;font-size:14px;line-height:1.55}
+.chat-bubble.user{background:#171717;color:#fff;margin-left:10%}
+.chat-bubble.ai{background:#f4efe6;color:#22211f;margin-right:10%}
+.composer{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:12px;position:sticky;bottom:0;background:var(--bg);padding-top:10px;z-index:2}
+.composer-tools{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.composer-tools select{width:auto;min-width:190px;max-width:220px;height:40px;background:#fff}
+.file-upload{height:40px;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:0 12px;font-size:13px;font-weight:750;color:var(--text);cursor:pointer}
+.file-upload input{display:none}
+.file-chip{font-size:12px;color:var(--muted);min-width:120px}
+.composer textarea{min-height:54px;border-radius:14px;font-size:14px}
+#panel-command.active{display:flex;flex-direction:column;height:calc(100vh - 118px);min-height:0}
+@media (max-width: 960px){
+body{height:auto;min-height:100vh;flex-direction:column;overflow:auto}
+.sidebar{position:fixed;z-index:20;left:0;top:0;bottom:0;width:min(84vw,320px);border-right:1px solid #2a2926;border-bottom:none;max-height:none;box-shadow:20px 0 60px rgba(0,0,0,.28)}
+.sidebar.closed{width:0;box-shadow:none}
+.sidebar.collapsed{width:min(84vw,320px)}
+.topbar{align-items:flex-start}
+.admin-chip{display:none}
+.grid2,.grid3,.grid4,.guide-hero,.task-grid,.command-shell{grid-template-columns:1fr}
+.guide-row{grid-template-columns:1fr}
+.content{padding:16px}
+table{min-width:640px}
+#panel-command.active{height:calc(100vh - 92px)}
+.composer{grid-template-columns:1fr}
+.composer button{width:100%!important}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-name">MNI</div>
+    <div class="brand-sub">Automation Manager</div>
+  </div>
+  <div class="nav-sec">Start</div>
+  <div class="ni active" onclick="showPanel('dashboard')"><span class="ico">01</span> Home</div>
+  <div class="ni" onclick="showPanel('command')"><span class="ico">✦</span> MNI Chat</div>
+  <div class="ni" onclick="showPanel('guide')"><span class="ico">?</span> What Is This?</div>
+  <div class="drawer-stats">
+    <div class="drawer-stats-title">Today Snapshot</div>
+    <div class="drawer-stat"><span>Users</span><div class="drawer-mini-track"><div id="drawer-users-bar" class="drawer-mini-fill" style="width:20%"></div></div></div>
+    <div class="drawer-stat"><span>Chats</span><div class="drawer-mini-track"><div id="drawer-msgs-bar" class="drawer-mini-fill" style="width:20%"></div></div></div>
+    <div class="drawer-stat"><span>APIs</span><div class="drawer-mini-track"><div id="drawer-apis-bar" class="drawer-mini-fill" style="width:20%"></div></div></div>
+  </div>
+  <div class="nav-sec">Setup</div>
+  <div class="ni" onclick="showPanel('access')"><span class="ico">🔐</span> Access & Login</div>
+  <div class="ni" onclick="showPanel('integration')"><span class="ico">🔌</span> Connect Apps</div>
+  <div class="ni" onclick="showPanel('automations')"><span class="ico">⚡</span> Automations</div>
+  <div class="ni" onclick="showPanel('features')"><span class="ico">✓</span> On / Off Switches</div>
+  <div class="ni" onclick="showPanel('apis')"><span class="ico">🔑</span> AI Providers</div>
+  <div class="nav-sec">AI Assistant</div>
+  <div class="ni" onclick="showPanel('ai')"><span class="ico">AI</span> Brain & Prompt</div>
+  <div class="ni" onclick="showPanel('personalities')"><span class="ico">🙂</span> Reply Style</div>
+  <div class="ni" onclick="showPanel('keli-core')"><span class="ico">⚙</span> Voice Tools</div>
+  <div class="nav-sec">Channels</div>
+  <div class="ni" onclick="showPanel('platform-bots')"><span class="ico">🤖</span> Channel Bots</div>
+  <div class="ni" onclick="showPanel('logs')"><span class="ico">📋</span> Conversations</div>
+  <div class="ni" onclick="showPanel('moderation')"><span class="ico">⚖</span> Safety Events</div>
+  <div class="nav-sec">People</div>
+  <div class="ni" onclick="showPanel('users')"><span class="ico">👥</span> Users</div>
+  <div class="ni" onclick="showPanel('outreach')"><span class="ico">📢</span> Broadcasts</div>
+  <div class="ni" onclick="showPanel('control')"><span class="ico">🛡</span> Admin Roles</div>
+  <div class="nav-sec">Content</div>
+  <div class="ni" onclick="showPanel('localdata')"><span class="ico">📚</span> Knowledge Sources</div>
+  <div class="ni" onclick="showPanel('blogs')"><span class="ico">✍</span> Posts & Notes</div>
+  <div class="ni" onclick="showPanel('data-agents')"><span class="ico">🔎</span> Data Watchers</div>
+  <div class="nav-sec">Work</div>
+  <div class="ni" onclick="showPanel('appointments')"><span class="ico">📅</span> Appointments</div>
+  <div class="ni" onclick="showPanel('availability')"><span class="ico">⏰</span> Availability</div>
+  <div class="ni" onclick="showPanel('forms')"><span class="ico">🧾</span> Forms</div>
+  <div class="ni" onclick="showPanel('emails')"><span class="ico">📧</span> Emails</div>
+  <div class="nav-sec">Advanced</div>
+  <div class="ni" onclick="showPanel('monitor')"><span class="ico">🛰</span> System Monitor</div>
+  <div class="ni" onclick="showMonitorDeveloperApi()"><span class="ico">API</span> MNI API</div>
+  <div class="nav-bottom">
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="drawer-toggle" onclick="toggleDrawer()">☰</button>
+      <div>
+        <div class="topbar-title" id="panel-title">Dashboard</div>
+        <div class="topbar-sub"><span class="status-dot"></span>MNI is online</div>
+      </div>
+    </div>
+    <div class="admin-chip">Local admin session</div>
+  </div>
+  <div class="content">
+
+    <!-- ── DASHBOARD ─────────────────────────────── -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="hero-panel">
+        <h2>Welcome to MNI Automation Manager</h2>
+        <p>Start here. Pick the task you want, and MNI will take you to the right place. You do not need to know backend routes or developer terms.</p>
+      </div>
+      <div class="home-chat-card">
+        <div class="card-title">Talk to your AI</div>
+        <div class="home-chat-row">
+          <textarea id="home-chat-message" placeholder="Ask MNI to draft a reply, explain setup, check data, or plan an automation..."></textarea>
+          <button class="btn btn-primary" style="width:auto;min-width:110px" onclick="sendHomeCommand()">Send</button>
+        </div>
+      </div>
+      <div class="task-grid">
+        <div class="task-card" onclick="showPanel('integration')"><b>Connect Telegram, Discord, WhatsApp, Instagram</b><span>Add platform tokens and webhook URLs.</span></div>
+        <div class="task-card" onclick="showPanel('ai')"><b>Change how the AI replies</b><span>Edit prompt, tone, and personality.</span></div>
+        <div class="task-card" onclick="showPanel('apis')"><b>Add AI provider keys</b><span>Connect OpenAI, Anthropic, voice, image, or video APIs.</span></div>
+        <div class="task-card" onclick="showPanel('users')"><b>Manage users</b><span>Find users, block/unblock, and add admins.</span></div>
+        <div class="task-card" onclick="showPanel('logs')"><b>See bot output</b><span>Check conversations, responses, status, and provider used.</span></div>
+        <div class="task-card" onclick="showPanel('access')"><b>Change login security</b><span>Use password, Google login, or password plus Google.</span></div>
+      </div>
+      <div class="grid4" id="stats-grid" style="margin-bottom:20px">
+        <div class="stat"><div class="stat-val" id="s-users">—</div><div class="stat-label">Total Users</div></div>
+        <div class="stat"><div class="stat-val" id="s-msgs">—</div><div class="stat-label">Messages</div></div>
+        <div class="stat"><div class="stat-val" id="s-blocked">—</div><div class="stat-label">Blocked</div></div>
+        <div class="stat"><div class="stat-val" id="s-apis">—</div><div class="stat-label">Active APIs</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">📱 Messages by platform</div>
+          <div id="platform-stats" class="chart-bars">Loading...</div>
+        </div>
+        <div class="card">
+          <div class="card-title">🎨 Messages by type</div>
+          <div id="type-stats" class="chart-bars">Loading...</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Quick Actions</div>
+        <div class="grid4">
+          <button class="btn btn-outline" onclick="showPanel('guide')">What Is This?</button>
+          <button class="btn btn-outline" onclick="showPanel('ai')">AI Brain</button>
+          <button class="btn btn-outline" onclick="showPanel('integration')">Connect Apps</button>
+          <button class="btn btn-outline" onclick="showPanel('apis')">AI Providers</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MNI CHAT / COMMAND CENTER ─────────────── -->
+    <div class="panel" id="panel-command">
+      <div class="hero-panel">
+        <h2>Talk to MNI</h2>
+        <p>Ask MNI to explain data, check connected sources, draft replies, test prompts, or route work to the right AI function.</p>
+      </div>
+      <div class="command-shell">
+        <div class="command-chat-main">
+          <div id="command-chat-results" class="chat-window">
+            <div class="chat-bubble ai">Hi, I am MNI. Ask me about users, bot replies, data sources, automations, or setup.</div>
+          </div>
+          <div class="composer">
+            <div class="composer-tools">
+              <select id="command-action">
+                <option value="chat">Chat with MNI</option>
+                <option value="n8n">Run n8n automation</option>
+                <option value="explain_file">Explain attached file</option>
+              </select>
+              <label class="file-upload">Attach file
+                <input id="command-file" type="file" accept=".txt,.md,.json,.csv,.log">
+              </label>
+              <span id="command-file-chip" class="file-chip">No file selected</span>
+            </div>
+            <textarea id="command-chat-message" placeholder="Ask MNI anything about your bot..."></textarea>
+            <button class="btn btn-primary" style="width:auto;min-width:110px" onclick="runCommandChat()">Send</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Try asking</div>
+          <div class="guide-list">
+            <button class="btn btn-outline" onclick="prefillCommand('What changed in recent bot conversations?')">Recent conversations</button>
+            <button class="btn btn-outline" onclick="prefillCommand('Which data agents need setup?')">Data agents</button>
+            <button class="btn btn-outline" onclick="prefillCommand('How do I connect n8n automations?')">n8n setup</button>
+            <button class="btn btn-outline" onclick="openN8nPanel()">Open n8n Automations</button>
+            <button class="btn btn-outline" onclick="prefillCommand('Check my platform connection status')">Channel status</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ACCESS & LOGIN ────────────────────────── -->
+    <div class="panel" id="panel-access">
+      <div class="hero-panel">
+        <h2>Access & Login</h2>
+        <p>Choose how admins enter MNI. You can keep simple password login, use real Google sign-in, token login, or require password plus Google for extra security.</p>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Current Login Settings</div>
+          <div id="auth-status-box" style="font-size:13px;color:#667789;line-height:1.8">Loading...</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Update Login Method</div>
+          <div class="field-group">
+            <label class="field-label">Admin Username</label>
+            <input type="text" id="auth-username" placeholder="admin">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Login Method</label>
+            <select id="auth-method" onchange="syncAuthSettingsFields()">
+              <option value="password">Password only</option>
+              <option value="google_oauth">Google button login</option>
+              <option value="password_google_oauth">Password + Google button</option>
+            </select>
+          </div>
+          <div class="field-group" id="auth-password-wrap">
+            <label class="field-label">New Password</label>
+            <input type="password" id="auth-password" placeholder="Leave blank to keep current password">
+          </div>
+          <div id="auth-google-oauth-wrap">
+            <div style="font-size:12px;color:#8fa3ad;line-height:1.55;margin-bottom:12px">
+              Google login button ke liye sirf OAuth Client ID chahiye. Client Secret frontend login ke liye nahi chahiye; use sirf backend Google API tasks jaise Meet automation me rakho.
+            </div>
+            <div class="field-group">
+              <label class="field-label">Google Client ID</label>
+              <input type="text" id="auth-google-client-id" placeholder="OAuth Client ID from Google Cloud Console">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Allowed Google Emails</label>
+              <input type="text" id="auth-google-allowed-emails" placeholder="owner@example.com, admin@example.com">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveAuthSettings()">Save Login Settings</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Google Login History</div>
+        <div id="google-login-history" style="font-size:13px;color:#8fa3ad">Loading...</div>
+      </div>
+    </div>
+
+    <!-- ── PROJECT GUIDE ─────────────────────────── -->
+    <div class="panel" id="panel-guide">
+      <div class="guide-hero">
+        <div class="guide-block">
+          <div class="guide-kicker">Architecture</div>
+          <div class="guide-title">How this bot stack fits together</div>
+          <div class="guide-text">
+            MNI uses a Flask backend as the brain and admin API, a server-rendered admin GUI, SQLite/Postgres for runtime data, and optional Node workers for Telegram and Discord. Most panels on this screen call real backend endpoints under <span class="code-pill">/api/admin</span>.
+          </div>
+        </div>
+        <div class="guide-block">
+          <div class="guide-kicker">Local setup</div>
+          <div class="guide-text">
+            Run <span class="code-pill">python scripts/setup_local.py --install-deps --install-node</span> once. It creates <span class="code-pill">.env</span>, creates <span class="code-pill">config/google_auth.json</span>, prepares <span class="code-pill">instance/</span>, and initializes the database tables.
+          </div>
+          <div class="guide-text" style="margin-top:12px">
+            Start the backend with <span class="code-pill">python backend/app.py</span>. Start bot workers separately with <span class="code-pill">node bot/index.js</span> when platform tokens are configured.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Backend Map</div>
+          <div class="guide-list">
+            <div class="guide-row"><div class="guide-label">Flask app</div><div class="guide-value"><span class="code-pill">backend/app.py</span> registers auth, admin, chat, and platform webhook routes.</div></div>
+            <div class="guide-row"><div class="guide-label">Admin API</div><div class="guide-value"><span class="code-pill">backend/routes/admin.py</span> powers this GUI: config, RAG, APIs, users, bots, outreach, logs, and monitor data.</div></div>
+            <div class="guide-row"><div class="guide-label">Chat API</div><div class="guide-value"><span class="code-pill">/api/chat/message</span> runs messages through moderation, config, local data, AI routing, and logging.</div></div>
+            <div class="guide-row"><div class="guide-label">Webhooks</div><div class="guide-value"><span class="code-pill">backend/routes/platforms.py</span> receives Telegram, Discord, WhatsApp, and Instagram events.</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Frontend Map</div>
+          <div class="guide-list">
+            <div class="guide-row"><div class="guide-label">Login</div><div class="guide-value"><span class="code-pill">admin/templates/login.html</span> handles first admin registration and password login.</div></div>
+            <div class="guide-row"><div class="guide-label">Dashboard</div><div class="guide-value"><span class="code-pill">admin/templates/dashboard.html</span> is the connected admin console. Panels are hidden/shown in-place and fetch JSON from the backend.</div></div>
+            <div class="guide-row"><div class="guide-label">Secrets</div><div class="guide-value">Sensitive fields are saved encrypted in config rows when supported. Real local secret files are ignored by git.</div></div>
+            <div class="guide-row"><div class="guide-label">Dead pages</div><div class="guide-value">Disconnected standalone demo pages were removed so the GUI only exposes working backend-connected tools.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Database And Data</div>
+          <div class="guide-list">
+            <div class="guide-row"><div class="guide-label">Default DB</div><div class="guide-value">Local runs use the SQLite database in <span class="code-pill">instance/</span> unless <span class="code-pill">DATABASE_URL</span> is set.</div></div>
+            <div class="guide-row"><div class="guide-label">Hosted DB</div><div class="guide-value">Render/Railway/Postgres should use <span class="code-pill">DATABASE_URL</span>. The Database Deployment card can save a future external URL for the next restart.</div></div>
+            <div class="guide-row"><div class="guide-label">Auto seed</div><div class="guide-value">On startup the app creates tables, seeds default config, local data sources, and default data agents.</div></div>
+            <div class="guide-row"><div class="guide-label">Cleanup</div><div class="guide-value">Generated database, logs, and Python caches are ignored and should not be committed.</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Google Meet Setup</div>
+          <div class="guide-list">
+            <div class="guide-row"><div class="guide-label">Option 1</div><div class="guide-value">Fill Google Client ID, Client Secret, and Refresh Token in Platform Integration, then save.</div></div>
+            <div class="guide-row"><div class="guide-label">Option 2</div><div class="guide-value">Copy <span class="code-pill">config/google_auth.example.json</span> to <span class="code-pill">config/google_auth.json</span> and fill OAuth values there.</div></div>
+            <div class="guide-row"><div class="guide-label">Scope</div><div class="guide-value">Use <span class="code-pill">https://www.googleapis.com/auth/meetings.space.created</span> for creating Meet spaces.</div></div>
+            <div class="guide-row"><div class="guide-label">Usage</div><div class="guide-value">After setup, ask the bot to create or schedule a Google Meet. The utility handler calls the Meet REST API and returns the link.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AI & RAG BRAIN ────────────────────────── -->
+    <div class="panel" id="panel-ai">
+      <div class="card">
+        <div class="card-title">🧠 RAG Brain — Live System Prompt</div>
+        <div class="field-group">
+          <label class="field-label">Upload RAG File (.txt / .md)</label>
+          <input type="file" id="rag-file" accept=".txt,.md,text/plain,text/markdown">
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="btn btn-outline" onclick="uploadRAGFile()">📤 Upload RAG File</button>
+        </div>
+        <div class="field-group">
+          <label class="field-label">System Prompt (updates instantly)</label>
+          <textarea id="rag-prompt" rows="12" placeholder="Loading..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="saveRAG()">💾 Save RAG Brain</button>
+      </div>
+      <div class="card">
+        <div class="card-title">😎 Personality Engine</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Personality</label>
+            <input type="text" id="cfg-personality" placeholder="confident, witty, slightly flirty...">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Tone</label>
+            <input type="text" id="cfg-tone" placeholder="sharp, smart, engaging...">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="savePersonality()">💾 Save Personality</button>
+      </div>
+    </div>
+
+    <!-- ── BOT PERSONALITIES ───────────────────────── -->
+    <div class="panel" id="panel-personalities">
+      <div class="card">
+        <div class="card-title">➕ Create New Personality</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Name</label>
+            <input type="text" id="personality-name" placeholder="e.g. Friendly Assistant">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Role</label>
+            <input type="text" id="personality-role" placeholder="e.g. customer support">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Description</label>
+          <textarea id="personality-description" rows="3" placeholder="Describe the personality traits..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="createPersonality()">➕ Create Personality</button>
+      </div>
+      <div class="card">
+        <div class="card-title">😎 Available Personalities</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Role</th><th>Description</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody id="personalities-table"><tr><td colspan="5" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── API KEYS ──────────────────────────────── -->
+    <div class="panel" id="panel-apis">
+      <div class="card">
+        <div class="card-title">➕ Add New API Key</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Name</label>
+            <input type="text" id="api-name" placeholder="e.g. Claude Primary">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Category</label>
+            <select id="api-category">
+              <option value="text">Text (AI)</option>
+              <option value="image">Image Generation</option>
+              <option value="voice">Voice Generation</option>
+              <option value="video">Video Generation</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Provider</label>
+            <input type="text" id="api-provider" placeholder="anthropic / openai / elevenlabs...">
+          </div>
+          <div class="field-group">
+            <label class="field-label">API Key</label>
+            <input type="password" id="api-key-val" placeholder="sk-...">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Priority (1=highest)</label>
+            <input type="number" id="api-priority" value="1" min="1">
+          </div>
+          <div class="field-group" style="display:flex;align-items:center;gap:10px;padding-top:22px">
+            <input type="checkbox" id="api-primary" style="width:auto">
+            <label for="api-primary" style="font-size:13px;color:#e2e2f0;text-transform:none;letter-spacing:0">Set as Primary</label>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="addApiKey()">➕ Add API Key</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🔑 Configured API Keys</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Category</th><th>Provider</th><th>Key</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="api-keys-table"><tr><td colspan="7" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PLATFORM INTEGRATION ──────────────────── -->
+    <div class="panel" id="panel-integration">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#e2e2f0">Platform Integration</div>
+          <div style="font-size:13px;color:#555570;margin-top:2px">Connect MNI to external messaging platforms.</div>
+        </div>
+        <button class="btn btn-primary" onclick="savePlatformTokens()">💾 Save Settings</button>
+      </div>
+
+      <!-- Telegram -->
+      <div class="plat-card">
+        <div class="plat-card-title">✈️ Telegram Bot</div>
+        <div class="plat-card-sub">Create a bot via @BotFather and paste the token below.</div>
+        <div class="field-group">
+          <label class="field-label">Bot Token</label>
+          <input type="text" id="tg-token" placeholder="123456789:ABCdefGHIjklmNOPqrstUVwxyZ">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Webhook URL</label>
+          <div class="webhook-box">
+            <span id="tg-webhook">Loading...</span>
+            <button class="copy-btn" onclick="copyText('tg-webhook')">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Discord -->
+      <div class="plat-card">
+        <div class="plat-card-title">💬 Discord Bot</div>
+        <div class="plat-card-sub">Get your bot token from the Discord Developer Portal.</div>
+        <div class="field-group">
+          <label class="field-label">Bot Token</label>
+          <input type="text" id="dc-token" placeholder="MTA... token string">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Webhook URL</label>
+          <div class="webhook-box">
+            <span id="dc-webhook">Loading...</span>
+            <button class="copy-btn" onclick="copyText('dc-webhook')">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WhatsApp -->
+      <div class="plat-card">
+        <div class="plat-card-title">💚 WhatsApp Business API</div>
+        <div class="plat-card-sub">Configure via Meta App Dashboard.</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Access Token</label>
+            <input type="text" id="wa-token" placeholder="EAAB...">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Phone Number ID</label>
+            <input type="text" id="wa-phone-id" placeholder="1234567890">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Webhook URL</label>
+          <div class="webhook-box">
+            <span id="wa-webhook">Loading...</span>
+            <button class="copy-btn" onclick="copyText('wa-webhook')">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instagram -->
+      <div class="plat-card">
+        <div class="plat-card-title">📸 Instagram (Meta)</div>
+        <div class="plat-card-sub">Configure via Meta App Dashboard.</div>
+        <div class="field-group">
+          <label class="field-label">Access Token</label>
+          <input type="text" id="ig-token" placeholder="Your Instagram access token">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Webhook URL</label>
+          <div class="webhook-box">
+            <span id="ig-webhook">Loading...</span>
+            <button class="copy-btn" onclick="copyText('ig-webhook')">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared Meta Verify Token -->
+      <div class="plat-card" style="border-color:#7c3aed">
+        <div class="plat-card-title">🔐 Shared Meta Webhook Verification</div>
+        <div class="plat-card-sub">Used for verifying both WhatsApp and Instagram webhooks. You create this token here, and provide it to Meta during webhook setup.</div>
+        <div class="field-group">
+          <label class="field-label">Verify Token</label>
+          <input type="text" id="meta-verify" placeholder="mni-verify-token">
+        </div>
+      </div>
+
+      <!-- Backend URL -->
+      <div class="plat-card">
+        <div class="plat-card-title">🌐 Backend URL</div>
+        <div class="plat-card-sub">Your deployed backend URL (e.g. Render / Railway). Used to generate all webhook URLs above.</div>
+        <div class="field-group">
+          <label class="field-label">Base URL</label>
+          <input type="text" id="backend-url" placeholder="https://your-app.onrender.com" oninput="updateWebhookURLs()">
+        </div>
+      </div>
+
+      <div class="plat-card" style="border-color:#22c55e">
+        <div class="plat-card-title">🗄️ Database Deployment</div>
+        <div class="plat-card-sub">Render Postgres ke liye env `DATABASE_URL` best hai. Future external DB ke liye yahan URL save kar sakte ho; next restart ke baad app usse use karega when env override is not present.</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Database Label</label>
+            <input type="text" id="database-label" placeholder="e.g. Render Postgres / My VPS Postgres">
+          </div>
+          <div class="field-group">
+            <label class="field-label">SSL Mode</label>
+            <select id="database-ssl-mode">
+              <option value="">Default</option>
+              <option value="require">require</option>
+              <option value="prefer">prefer</option>
+              <option value="disable">disable</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Future External Database URL</label>
+          <input type="password" id="database-url" placeholder="postgresql://user:password@host:5432/dbname">
+        </div>
+        <div id="database-status-note" style="font-size:12px;color:#8080a0;line-height:1.6">
+          Loading database deployment status...
+        </div>
+      </div>
+
+      <div class="plat-card">
+        <div class="plat-card-title">🤝 Google Meet Automation</div>
+        <div class="plat-card-sub">"Create Google Meet" utility requests use these OAuth credentials. You can also fill the ignored local file <code>config/google_auth.json</code>.</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Google Client ID</label>
+            <input type="text" id="google-client-id" placeholder="Google OAuth client id">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Google Client Secret</label>
+            <input type="password" id="google-client-secret" placeholder="Google OAuth client secret">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Google Refresh Token</label>
+          <input type="password" id="google-refresh-token" placeholder="Refresh token with Meet access">
+        </div>
+      </div>
+
+      <div class="plat-card">
+        <div class="plat-card-title">📧 Email Automation</div>
+        <div class="plat-card-sub">SMTP configuration for email sending and logs.</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">SMTP Host</label>
+            <input type="text" id="email-smtp-host" placeholder="smtp.gmail.com">
+          </div>
+          <div class="field-group">
+            <label class="field-label">SMTP Port</label>
+            <input type="number" id="email-smtp-port" placeholder="587">
+          </div>
+          <div class="field-group">
+            <label class="field-label">SMTP Username</label>
+            <input type="text" id="email-smtp-username" placeholder="you@example.com">
+          </div>
+          <div class="field-group">
+            <label class="field-label">SMTP Password / App Password</label>
+            <input type="password" id="email-smtp-password" placeholder="SMTP password">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">From Email</label>
+          <input type="text" id="email-from" placeholder="you@example.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AUTOMATIONS / N8N ─────────────────────── -->
+    <div class="panel" id="panel-automations">
+      <div class="hero-panel">
+        <h2>Automations</h2>
+        <p>Connect your own n8n server or n8n Cloud workspace. MNI can trigger workflows from the admin panel first, and the same config can power bot commands later.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">How n8n works with MNI</div>
+        <div class="flow-steps">
+          <div class="flow-step"><b>1. Save n8n URL</b><span>Add your self-hosted n8n or n8n Cloud URL plus API key once.</span></div>
+          <div class="flow-step"><b>2. Trigger from MNI</b><span>MNI sends a message, user, platform, and source payload to your workflow webhook.</span></div>
+          <div class="flow-step"><b>3. Return action</b><span>n8n can create emails, sheets, CRM rows, Meet links, tickets, or send a response back.</span></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">n8n Connection</div>
+          <div class="field-group">
+            <label class="field-label">n8n Base URL</label>
+            <input type="text" id="n8n-url" placeholder="https://your-n8n.example.com">
+          </div>
+          <div class="field-group">
+            <label class="field-label">n8n API Key</label>
+            <input type="password" id="n8n-api-key" placeholder="Leave blank to keep saved key">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Default Webhook URL</label>
+            <input type="text" id="n8n-webhook-url" placeholder="https://your-n8n.example.com/webhook/mni">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Bot Trigger Keyword</label>
+            <input type="text" id="n8n-trigger-keyword" placeholder="/workflow">
+          </div>
+          <button class="btn btn-primary" onclick="saveN8nConfig()">Save Automations</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Test Workflow</div>
+          <div class="field-group">
+            <label class="field-label">Test Message</label>
+            <input type="text" id="n8n-test-message" placeholder="New lead from MNI admin">
+          </div>
+          <button class="btn btn-outline" onclick="testN8nWebhook()">Send Test Trigger</button>
+          <div id="n8n-test-result" style="font-size:12px;color:#8fa3ad;margin-top:12px;white-space:pre-wrap">No test sent yet.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Available n8n Workflows</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="btn btn-outline btn-sm" onclick="loadN8nWorkflows()">Refresh Workflows</button>
+        </div>
+        <div id="n8n-workflows" style="font-size:13px;color:#8fa3ad">Connect n8n and refresh to see workflows.</div>
+      </div>
+    </div>
+
+    <!-- ── PLATFORM BOTS ──────────────────────────── -->
+    <div class="panel" id="panel-platform-bots">
+      <div class="card">
+        <div class="card-title">➕ Add Or Edit Platform Bot</div>
+        <input type="hidden" id="bot-id">
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Platform</label>
+            <select id="bot-platform" onchange="updatePlatformBotEndpointUI()">
+              <option value="telegram">Telegram</option>
+              <option value="discord">Discord</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="instagram">Instagram</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Bot Name</label>
+            <input type="text" id="bot-name" placeholder="e.g. Support Bot">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Description</label>
+          <input type="text" id="bot-description" placeholder="Bot purpose and capabilities">
+        </div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Bot Token</label>
+            <input type="password" id="bot-token" placeholder="Paste full bot/API token if needed">
+          </div>
+          <div class="field-group">
+            <label class="field-label" id="bot-endpoint-label">Webhook URL</label>
+            <input type="text" id="bot-target-url" placeholder="https://your-public-backend.example.com/api/platforms/webhook/telegram">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="savePlatformBot()">💾 Save Bot</button>
+          <button class="btn btn-outline" onclick="resetPlatformBotForm()">Reset</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🤖 Platform Bots</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Platform</th><th>Name</th><th>Description</th><th>Webhook / Target</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="platform-bots-table"><tr><td colspan="6" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MODERATION EVENTS ─────────────────────── -->
+    <div class="panel" id="panel-moderation">
+      <div class="card">
+        <div class="card-title">⚖️ Moderation Events</div>
+        <div style="display:flex;gap:12px;margin-bottom:16px">
+          <select id="moderation-platform-filter" style="width:160px" onchange="loadModerationEvents()">
+            <option value="">All Platforms</option>
+            <option value="telegram">Telegram</option>
+            <option value="discord">Discord</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="instagram">Instagram</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="loadModerationEvents()">Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>Platform</th><th>User</th><th>Chat</th><th>Action</th><th>Reason</th><th>Actions</th></tr></thead>
+            <tbody id="moderation-table"><tr><td colspan="7" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FEATURES ───────────────────────────────── -->
+    <div class="panel" id="panel-features">
+      <div class="card">
+        <div class="card-title">🎨 Feature Control Panel</div>
+        <div id="feature-toggles">Loading...</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🌐 Platform Control Panel</div>
+        <div id="platform-toggles">Loading...</div>
+      </div>
+    </div>
+
+    <!-- ── MNI CORE ───────────────────────────── -->
+    <div class="panel" id="panel-keli-core">
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">🪄 MNI Core Configuration</div>
+          <div class="toggle-wrap">
+            <div class="toggle-info">
+              <div class="toggle-name">Enable MNI Core</div>
+              <div class="toggle-desc">Assistant tools embedded inside the MNI admin panel.</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="keli-enabled">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="grid2" style="margin-top:16px">
+            <div class="field-group">
+              <label class="field-label">Assistant Name</label>
+              <input type="text" id="keli-name" placeholder="MNI Core">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Preferred Text Provider</label>
+              <select id="keli-provider">
+                <option value="sarvam">Sarvam</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+                <option value="gemini">Gemini</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Default Voice Gender</label>
+              <select id="keli-voice-gender">
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Default Voice Tone</label>
+              <select id="keli-voice-tone">
+                <option value="soft">Soft</option>
+                <option value="energetic">Energetic</option>
+                <option value="formal">Formal</option>
+                <option value="robotic">Robotic</option>
+              </select>
+            </div>
+          </div>
+          <div class="toggle-wrap">
+            <div class="toggle-info">
+              <div class="toggle-name">Prefer Local/Open-Source Tools</div>
+              <div class="toggle-desc">Use local tools first, then fall back to APIs.</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="keli-prefer-local">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="toggle-wrap">
+            <div class="toggle-info">
+              <div class="toggle-name">Speech to Text</div>
+              <div class="toggle-desc">Whisper-based audio transcription for admin testing.</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="keli-stt-enabled">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="toggle-wrap">
+            <div class="toggle-info">
+              <div class="toggle-name">Text to Speech</div>
+              <div class="toggle-desc">Generate voice replies with multiple voice styles.</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="keli-tts-enabled">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="field-group" style="margin-top:16px">
+            <label class="field-label">System Prompt</label>
+            <textarea id="keli-system-prompt" rows="8" placeholder="How should MNI behave?"></textarea>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Voice Call Webhook</label>
+            <input type="text" id="keli-call-webhook" placeholder="https://your-connector.example.com/call">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Voice Call Secret</label>
+            <input type="password" id="keli-call-secret" placeholder="Optional shared secret">
+          </div>
+          <button class="btn btn-primary" onclick="saveKeliCoreConfig()">💾 Save MNI Core</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🎛️ MNI Core Test Console</div>
+          <div id="keli-capabilities" style="margin-bottom:14px;color:#c4c4e0;font-size:13px">Loading capabilities...</div>
+          <div class="field-group">
+            <label class="field-label">Test Message</label>
+            <textarea id="keli-test-message" rows="7" placeholder="Example: create a Hindi voice greeting, search latest AI news, or trigger a voice call connector."></textarea>
+          </div>
+          <div class="grid2">
+            <div class="field-group">
+              <label class="field-label">Response Voice Gender</label>
+              <select id="keli-test-voice-gender">
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Response Voice Tone</label>
+              <select id="keli-test-voice-tone">
+                <option value="soft">Soft</option>
+                <option value="energetic">Energetic</option>
+                <option value="formal">Formal</option>
+                <option value="robotic">Robotic</option>
+              </select>
+            </div>
+          </div>
+          <div class="toggle-wrap">
+            <div class="toggle-info">
+              <div class="toggle-name">Speak Final Response</div>
+              <div class="toggle-desc">Generate audio for text responses too.</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="keli-speak-response">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">
+            <button class="btn btn-primary" onclick="runKeliCoreTest()">▶ Run Test</button>
+            <button class="btn btn-outline" onclick="transcribeKeliAudio()">🎙️ Transcribe Audio</button>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Audio Upload For STT</label>
+            <input type="file" id="keli-audio-file" accept="audio/*,.mp3,.wav,.m4a,.ogg">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Voice Clone Text</label>
+            <textarea id="keli-clone-text" rows="3" placeholder="Text that should be spoken in the cloned voice."></textarea>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Reference Voice Sample</label>
+            <input type="file" id="keli-clone-file" accept="audio/*,.mp3,.wav,.m4a,.ogg">
+          </div>
+          <button class="btn btn-outline" onclick="cloneKeliVoice()" style="margin-bottom:14px">🧬 Clone Voice</button>
+          <div id="keli-transcript-box" class="plat-card" style="display:none"></div>
+          <div id="keli-result-box" class="plat-card">
+            <div class="plat-card-title">Last Result</div>
+            <div class="plat-card-sub">Intent routing, text output, and optional generated audio appear here.</div>
+            <div id="keli-result-meta" style="font-size:12px;color:#8080a0;margin-bottom:10px">No test yet.</div>
+            <div id="keli-result-text" style="white-space:pre-wrap;font-size:13px;line-height:1.6;color:#e2e2f0"></div>
+            <audio id="keli-result-audio" controls style="width:100%;margin-top:12px;display:none"></audio>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-monitor">
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">🛰️ Runtime Overview</div>
+          <div id="monitor-credentials" style="font-size:13px;color:#c4c4e0">Loading credentials...</div>
+          <div class="section-divider"></div>
+          <div id="monitor-database" style="font-size:13px;color:#c4c4e0">Loading database status...</div>
+          <div class="section-divider"></div>
+          <div id="monitor-api-keys" style="font-size:13px;color:#c4c4e0">Loading API keys...</div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔎 Source Debug Console</div>
+          <div class="field-group">
+            <label class="field-label">Debug Prompt</label>
+            <textarea id="monitor-debug-message" rows="6" placeholder="Example: what is gdr in snapcourse or latest reddit linux security notes"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <button class="btn btn-primary" onclick="runSourceDebug()">Run Source Debug</button>
+            <button class="btn btn-outline" onclick="loadMonitorPanel()">Refresh Overview</button>
+          </div>
+          <div id="monitor-source-results" style="font-size:13px;color:#c4c4e0">No debug run yet.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">💬 Internal AI Chat</div>
+        <div class="field-group">
+          <label class="field-label">Ask AI With Monitor Sources</label>
+          <textarea id="monitor-chat-message" rows="5" placeholder="Example: what is gdr from readxhub and which source confirmed it?"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="btn btn-primary" onclick="runMonitorChat()">Send To AI</button>
+          <button class="btn btn-outline" onclick="clearMonitorChat()">Clear Chat</button>
+        </div>
+        <div id="monitor-chat-results" style="font-size:13px;color:#c4c4e0">No internal AI chat yet.</div>
+      </div>
+      <div class="card" id="monitor-developer-api-card">
+        <div class="card-title">🔐 MNI API Access</div>
+        <div style="font-size:12px;color:#8080a0;margin-bottom:14px">Generate an MNI API key for n8n, websites, bots, or custom pages. You can choose what each key can use: chat, image, voice, video, local sources, and active data agents.</div>
+        <div class="grid2">
+          <div>
+            <input type="hidden" id="dev-client-id">
+            <div class="field-group">
+              <label class="field-label">Client Name</label>
+              <input type="text" id="dev-client-name" placeholder="e.g. MNI Public API">
+            </div>
+            <div class="grid2">
+              <div class="field-group">
+                <label class="field-label">Slug</label>
+                <input type="text" id="dev-client-slug" placeholder="mni-public-api">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Webhook Slug</label>
+                <input type="text" id="dev-client-webhook-slug" placeholder="mni-public-hook">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Allowed Features</label>
+              <div id="dev-feature-options" class="grid2" style="gap:10px"></div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Allowed Sources</label>
+              <div id="dev-source-options" class="grid2" style="gap:10px"></div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="saveDeveloperClient()">Generate / Save MNI API</button>
+              <button class="btn btn-outline" onclick="resetDeveloperClientForm()">Clear Form</button>
+            </div>
+          </div>
+          <div>
+            <div class="plat-card" style="margin-bottom:14px">
+              <div class="plat-card-title">Latest Generated Key</div>
+              <div class="plat-card-sub">This plaintext key is shown only right after create or regenerate.</div>
+              <div class="webhook-box" style="display:flex;align-items:center;gap:10px">
+                <div id="dev-generated-key" style="flex:1;word-break:break-all">No key generated yet.</div>
+                <button class="copy-btn" onclick="copyElementValue('dev-generated-key')">Copy</button>
+              </div>
+            </div>
+            <div class="plat-card" style="margin-bottom:14px">
+              <div class="plat-card-title">MNI API Endpoint</div>
+              <div class="plat-card-sub">Use this from n8n HTTP Request, websites, or external bots with the `X-API-Key` header.</div>
+              <div class="webhook-box" style="display:flex;align-items:center;gap:10px">
+                <div id="dev-api-endpoint" style="flex:1;word-break:break-all">Loading...</div>
+                <button class="copy-btn" onclick="copyElementValue('dev-api-endpoint')">Copy</button>
+              </div>
+            </div>
+            <div class="plat-card">
+              <div class="plat-card-title">MNI Webhook URL</div>
+              <div class="plat-card-sub">Use this when another app can only send a webhook. POST `message`, `user_id`, `username`, and `chat_id` as JSON.</div>
+              <div class="webhook-box" style="display:flex;align-items:center;gap:10px">
+                <div id="dev-webhook-endpoint" style="flex:1;word-break:break-all">Create a client first.</div>
+                <button class="copy-btn" onclick="copyElementValue('dev-webhook-endpoint')">Copy</button>
+              </div>
+            </div>
+            <div class="plat-card" style="margin-top:14px">
+              <div class="plat-card-title">n8n HTTP Request Example</div>
+              <div class="plat-card-sub">Method: POST. Header: `X-API-Key: your_generated_key`. Body JSON: `{ "message": "write a reply", "user_id": "n8n", "username": "n8n", "chat_id": "workflow" }`.</div>
+            </div>
+          </div>
+        </div>
+        <div class="section-divider"></div>
+        <div id="dev-client-list" style="font-size:13px;color:#c4c4e0">Loading MNI API keys...</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🕵️ Data Agents</div>
+        <div id="monitor-agent-results" style="font-size:13px;color:#c4c4e0">Loading agents...</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📥 Recent Messages</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>Platform</th><th>User</th><th>Message</th><th>API</th><th>Status</th></tr></thead>
+            <tbody id="monitor-messages-table"><tr><td colspan="6" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LOCAL DATA ───────────────────────────── -->
+    <div class="panel" id="panel-localdata">
+      <div class="card">
+        <div class="card-title">🗂️ Local Data Sources</div>
+        <div style="font-size:12px;color:#8080a0;margin-bottom:14px">Enable local knowledge sources that the AI can use while answering questions.</div>
+        <div id="local-data-list">Loading...</div>
+      </div>
+    </div>
+
+    <!-- ── BLOGS ────────────────────────────────── -->
+    <div class="panel" id="panel-blogs">
+      <div class="card">
+        <div class="card-title">📝 Blog Writer</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Title</label>
+            <input type="text" id="blog-title" placeholder="Enter blog title">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Slug</label>
+            <input type="text" id="blog-slug" placeholder="auto-generated-if-empty">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Summary</label>
+            <input type="text" id="blog-summary" placeholder="Short summary">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Tags</label>
+            <input type="text" id="blog-tags" placeholder="seo, ai, tips">
+          </div>
+          <div class="field-group">
+            <label class="field-label">SEO Title</label>
+            <input type="text" id="blog-seo-title" placeholder="SEO title">
+          </div>
+          <div class="field-group">
+            <label class="field-label">SEO Description</label>
+            <input type="text" id="blog-seo-description" placeholder="SEO description">
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Status</label>
+            <select id="blog-status">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+          <div class="field-group" style="display:flex;align-items:center;gap:10px;padding-top:22px">
+            <input type="checkbox" id="blog-enabled" checked style="width:auto">
+            <label for="blog-enabled" style="font-size:13px;color:#e2e2f0;text-transform:none;letter-spacing:0">Use as AI knowledge source</label>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Content</label>
+          <textarea id="blog-content" rows="14" placeholder="Write the blog content here..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveBlog()">💾 Save Blog</button>
+          <button class="btn btn-outline" onclick="resetBlogForm()">➕ New Blog</button>
+        </div>
+        <input type="hidden" id="blog-id">
+      </div>
+      <div class="card">
+        <div class="card-title">📚 Saved Blogs</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Title</th><th>Slug</th><th>Status</th><th>Enabled</th><th>Updated</th><th>Actions</th></tr></thead>
+            <tbody id="blog-table"><tr><td colspan="6" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OUTREACH ────────────────────────────────── -->
+    <div class="panel" id="panel-outreach">
+      <div class="card">
+        <div class="card-title">📨 Admin Outreach</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Platform Filter</label>
+            <select id="outreach-platform" onchange="loadContacts(); clearSelectedContacts()">
+              <option value="">All Platforms</option>
+              <option value="telegram">Telegram</option>
+              <option value="discord">Discord</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="instagram">Instagram</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Selected Recipients</label>
+            <input type="text" id="selected-contact-count" value="0 selected" readonly>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Search Users</label>
+            <input type="text" id="outreach-contact-search" placeholder="username, user id..." oninput="loadContacts()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Group / Scope Picker</label>
+            <select id="outreach-group-select" onchange="loadGroupMembersForOutreach()">
+              <option value="">Select group / scope</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px">
+          <button class="btn btn-outline btn-sm" onclick="selectVisibleContacts()">Select Visible Users</button>
+          <button class="btn btn-outline btn-sm" onclick="selectAllPlatformContacts()">Select All In Platform</button>
+          <button class="btn btn-outline btn-sm" onclick="selectAllCrossPlatformContacts()">Select All Platforms</button>
+          <button class="btn btn-outline btn-sm" onclick="loadGroupMembersForOutreach(true)">Load Group Members</button>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Default Message</label>
+          <textarea id="outreach-message" rows="5" placeholder="Ek default message jo selected contacts ko jayega..."></textarea>
+        </div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Send Mode</label>
+            <select id="outreach-message-type">
+              <option value="text">Text Message</option>
+              <option value="voice">AI Voice Note</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Voice Tone</label>
+            <select id="outreach-voice-tone">
+              <option value="soft">Soft</option>
+              <option value="energetic">Energetic</option>
+              <option value="formal">Formal</option>
+              <option value="robotic">Robotic</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Voice Gender</label>
+          <select id="outreach-voice-gender">
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+          </select>
+        </div>
+        <div class="field-group" style="display:flex;align-items:center;gap:10px;padding-top:6px">
+          <input type="checkbox" id="outreach-as-admin" style="width:auto">
+          <label for="outreach-as-admin" style="font-size:13px;color:#e2e2f0;text-transform:none;letter-spacing:0">Send on behalf of admin</label>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="sendDirectOutreach()">🚀 Send Selected</button>
+          <button class="btn btn-outline" onclick="clearSelectedContacts()">Clear Selection</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 Known Contacts</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Select</th><th>User ID</th><th>Username</th><th>Platform</th><th>Messages</th><th>Last Seen</th><th>Custom Message</th><th>History</th></tr></thead>
+            <tbody id="contacts-table"><tr><td colspan="8" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🧾 Contact History</div>
+        <div id="contact-history" style="font-size:12px;color:#8080a0">Select a contact to view recent conversation history.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📢 Saved Broadcast Templates</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Target Platform</label>
+            <select id="outreach-template-platform">
+              <option value="all">All Platforms</option>
+              <option value="telegram">Telegram</option>
+              <option value="discord">Discord</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="instagram">Instagram</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Template Message</label>
+            <input type="text" id="outreach-content" placeholder="Your outreach template...">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="createOutreachMessage()">📢 Save Broadcast Template</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📨 Saved Outreach Messages</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Platform</th><th>Message</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="outreach-table"><tr><td colspan="4" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-control">
+      <div class="card">
+        <div class="card-title">🕹️ Admin Control</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Admin Usernames / IDs / Phone Numbers</label>
+            <textarea id="admin-identities" rows="5" placeholder="comma separated usernames, telegram ids, whatsapp numbers..."></textarea>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Super Admin Identities (Backend Only)</label>
+            <textarea id="super-admin-identities" rows="5" placeholder="sirf backend panel se editable super admins"></textarea>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Quick Grant Platform Admin</label>
+            <div class="grid2">
+              <input type="text" id="grant-admin-identity" placeholder="telegram:8476... or @username">
+              <select id="grant-admin-role">
+                <option value="platform_admin">Platform Admin</option>
+                <option value="mega_admin">Mega Admin</option>
+                <option value="moderator">Moderator</option>
+              </select>
+            </div>
+            <div class="grid2" style="margin-top:10px">
+              <select id="grant-admin-platforms">
+                <option value="all">All Platforms</option>
+                <option value="telegram">Telegram Only</option>
+                <option value="discord">Discord Only</option>
+              </select>
+              <select id="grant-admin-permissions">
+                <option value="all">All Permissions</option>
+                <option value="view_users,view_scopes,view_history">Read Only</option>
+                <option value="send_dm,broadcast,view_users,view_scopes,view_history">Messaging + View</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+              <button class="btn btn-outline btn-sm" onclick="grantPlatformAdmin()">Grant Role</button>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Global Switches</label>
+            <div class="toggle-wrap" style="padding-top:8px">
+              <div class="toggle-info">
+                <div class="toggle-name">AI Master Enabled</div>
+                <div class="toggle-desc">Poora AI globally on/off karo.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="ai-master-toggle">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div class="toggle-wrap" style="padding-top:8px">
+              <div class="toggle-info">
+                <div class="toggle-name">Silent Mode</div>
+                <div class="toggle-desc">Normal users ko ignore karega jab tak admin wake-up na kare.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="silent-mode-toggle">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveAdminControl()">💾 Save Admin Control</button>
+      </div>
+      <div class="card">
+        <div class="card-title">👑 Admin Registrations</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Rule</th><th>Value</th></tr></thead>
+            <tbody id="admin-rules-table"><tr><td>Registered admins</td><td style="color:#555570">Saved from Admin Identities field above</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🛡️ Platform Admin Roles</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Identity</th><th>Role</th><th>Platforms</th><th>Permissions</th><th>Actions</th></tr></thead>
+            <tbody id="platform-admin-roles-table"><tr><td colspan="5" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🚫 Scope Control</div>
+        <div style="font-size:12px;color:#8080a0;margin-bottom:14px">Telegram groups, Discord channels aur Instagram DMs yahan dikhte hain. Block/Remove sab par chalega; Telegram par Invite/Leave/Admin list bhi available hai.</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Platform</th><th>Group / Chat</th><th>Chat ID</th><th>Messages</th><th>Last Seen</th><th>Block</th><th>Invite</th><th>Admins</th><th>Leave</th><th>Remove</th></tr></thead>
+            <tbody id="scope-table"><tr><td colspan="10" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">👮 Scope Details</div>
+        <div id="scope-admins" style="font-size:12px;color:#8080a0">Telegram ke liye group admins, Discord ke liye channel info, aur Instagram ke liye DM info yahan dikh sakti hai.</div>
+      </div>
+    </div>
+
+    <!-- ── DATA AGENTS ─────────────────────────────── -->
+    <div class="panel" id="panel-data-agents">
+      <div class="card">
+        <div class="card-title">🕵️ Create Or Edit Data Agent</div>
+        <input type="hidden" id="agent-id">
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Name</label>
+            <input type="text" id="agent-name" placeholder="e.g. Product Researcher">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Role</label>
+            <input type="text" id="agent-role" placeholder="e.g. market research">
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Source URL</label>
+            <input type="text" id="agent-source-url" placeholder="https://...">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Mode</label>
+            <select id="agent-mode">
+              <option value="wait">Wait for Query</option>
+              <option value="active">Active Monitoring</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveDataAgent()">🕵️ Save Agent</button>
+          <button class="btn btn-outline" onclick="resetDataAgentForm()">Reset</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔗 Assign One URL To Multiple Agents</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Shared Source URL</label>
+            <input type="text" id="bulk-agent-source-url" placeholder="https://readxhub.in">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Mode For Selected Agents</label>
+            <select id="bulk-agent-mode">
+              <option value="">Keep Existing Mode</option>
+              <option value="active">Active Monitoring</option>
+              <option value="wait">Wait for Query</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div id="data-agent-bulk-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:10px 0 16px;color:#c4c4e0">
+          Loading agents...
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="bulkAssignDataAgents()">Apply URL To Selected Agents</button>
+          <button class="btn btn-outline" onclick="clearBulkAgentSelection()">Clear Selection</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Data Agents</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Role</th><th>Source</th><th>Mode</th><th>Last Status</th><th>Actions</th></tr></thead>
+            <tbody id="data-agents-table"><tr><td colspan="6" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USERS ──────────────────────────────────── -->
+    <div class="panel" id="panel-users">
+      <div class="card">
+        <div style="display:flex;gap:12px;margin-bottom:16px">
+          <input type="text" id="user-search" placeholder="Search by username or ID..." style="flex:1" oninput="searchUsers()">
+        </div>
+        <div style="font-size:12px;color:#8080a0;margin-bottom:14px">Known users ko yahin se admin identities list me add kar sakte ho, platform admin bana sakte ho, ya super admin list me push kar sakte ho.</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User ID</th><th>Username</th><th>Platform</th><th>Last Seen</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="users-table"><tr><td colspan="6" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <div id="user-pagination" style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end"></div>
+      </div>
+    </div>
+
+    <!-- ── LOGS ───────────────────────────────────── -->
+    <div class="panel" id="panel-logs">
+      <div class="card">
+        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center">
+          <select id="log-platform-filter" style="width:160px" onchange="loadLogs()">
+            <option value="">All Platforms</option>
+            <option value="telegram">Telegram</option>
+            <option value="discord">Discord</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="instagram">Instagram</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="loadLogs()">Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>Platform</th><th>User</th><th>Type</th><th>Message</th><th>Status</th></tr></thead>
+            <tbody id="logs-table"><tr><td colspan="6" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FORM SUBMISSIONS ────────────────────────── -->
+    <div class="panel" id="panel-forms">
+      <div class="card">
+        <div class="card-title">📋 Form Submissions</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Message</th><th>Submitted</th></tr></thead>
+            <tbody id="forms-table"><tr><td colspan="4" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EMAIL LOGS ─────────────────────────────── -->
+    <div class="panel" id="panel-emails">
+      <div class="card">
+        <div class="card-title">📨 Send Test Email</div>
+        <div class="grid2">
+          <div class="field-group">
+            <label class="field-label">Recipients</label>
+            <input type="text" id="email-test-recipients" placeholder="comma separated emails">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Subject</label>
+            <input type="text" id="email-test-subject" placeholder="Test subject">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Body</label>
+          <textarea id="email-test-body" rows="5" placeholder="Test email body"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="sendTestEmail()">📨 Send Test Email</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📧 Email Logs</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>To</th><th>Subject</th><th>Status</th><th>Sent</th></tr></thead>
+            <tbody id="emails-table"><tr><td colspan="4" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── APPOINTMENTS ────────────────────────────── -->
+    <div class="panel" id="panel-appointments">
+      <div class="card">
+        <div class="card-title">📅 Appointments</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Scheduled</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="appointments-table"><tr><td colspan="5" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AVAILABILITY RULES ─────────────────────── -->
+    <div class="panel" id="panel-availability">
+      <div class="card">
+        <div class="card-title">⏰ Availability Rules</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Day</th><th>Start Time</th><th>End Time</th><th>Status</th></tr></thead>
+            <tbody id="availability-table"><tr><td colspan="4" style="color:#555570">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div id="toast"></div>
+
+<script>
+const BASE   = '';
+const PANELS  = {
+  'dashboard':'Home','command':'MNI Chat','guide':'What Is This?','access':'Access & Login','ai':'AI Brain','keli-core':'Voice Tools','monitor':'System Monitor','personalities':'Reply Style','apis':'AI Providers',
+  'integration':'Connect Apps','automations':'Automations','platform-bots':'Channel Bots','moderation':'Safety Events','features':'On / Off Switches',
+  'localdata':'Knowledge Sources','blogs':'Posts & Notes','outreach':'Broadcasts','data-agents':'Data Watchers',
+  'users':'Users','control':'Admin Roles','logs':'Conversations','forms':'Forms','emails':'Emails',
+  'appointments':'Appointments','availability':'Availability'
+};
+let blogCache = [];
+let contactCache = [];
+let selectedContacts = [];
+let bannedScopes = [];
+let knownScopes = [];
+let outreachGroupCache = [];
+let platformAdminRoleCache = [];
+let monitorChatHistory = [];
+let commandChatHistory = [];
+let platformBotCache = [];
+let dataAgentCache = [];
+let bulkAgentSelection = [];
+let developerClientCache = [];
+let developerSourceCatalog = [];
+let authSettingsCache = {};
+const developerFeatureOptions = [
+  {key:'chat', label:'Text / Chat'},
+  {key:'image', label:'Image Generation'},
+  {key:'voice', label:'Text To Voice'},
+  {key:'video', label:'Video Generation'},
+];
+
+// ── Auth guard ────────────────────────────────────────────────
+function getToken() {
+  return localStorage.getItem('keli_token') || '';
+}
+
+if (!getToken()) window.location.href = '/admin';
+
+async function verifySession() {
+  const token = getToken();
+  if (!token) {
+    logout();
+    return false;
+  }
+  try {
+    const res = await fetch('/api/auth/verify', {
+      headers: {'Authorization': 'Bearer ' + token}
+    });
+    if (!res.ok) {
+      logout();
+      return false;
+    }
+    return true;
+  } catch (err) {
+    toast('Backend se connect nahi ho pa raha', 'err');
+    return false;
+  }
+}
+
+async function api(method, path, body) {
+  const token = getToken();
+  if (!token) {
+    logout();
+    return null;
+  }
+  const opts = {
+    method,
+    headers: {'Content-Type':'application/json','Authorization':'Bearer '+token}
+  };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const res = await fetch(BASE + path, opts);
+    const contentType = res.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json')
+      ? await res.json()
+      : {success: false, error: await res.text()};
+
+    if (res.status === 401 || res.status === 422) {
+      logout();
+      return null;
+    }
+    if (!res.ok) {
+      const message = payload?.error || payload?.message || `Request failed (${res.status})`;
+      toast(message, 'err');
+      return null;
+    }
+    return payload;
+  } catch (err) {
+    toast('Network error. Backend check karo.', 'err');
+    return null;
+  }
+}
+
+async function uploadFile(path, file) {
+  const form = new FormData();
+  form.append('file', file);
+  const token = getToken();
+  if (!token) {
+    logout();
+    return null;
+  }
+  try {
+    const res = await fetch(BASE + path, {
+      method: 'POST',
+      headers: {'Authorization':'Bearer '+token},
+      body: form
+    });
+    if (res.status === 401 || res.status === 422) { logout(); return null; }
+    const payload = await res.json();
+    if (!res.ok) {
+      toast(payload?.error || payload?.message || 'Upload failed', 'err');
+      return null;
+    }
+    return payload;
+  } catch (err) {
+    toast('Upload failed', 'err');
+    return null;
+  }
+}
+
+async function uploadForm(path, form) {
+  const token = getToken();
+  if (!token) {
+    logout();
+    return null;
+  }
+  try {
+    const res = await fetch(BASE + path, {
+      method: 'POST',
+      headers: {'Authorization':'Bearer '+token},
+      body: form
+    });
+    if (res.status === 401 || res.status === 422) { logout(); return null; }
+    const payload = await res.json();
+    if (!res.ok) {
+      toast(payload?.error || payload?.message || 'Request failed', 'err');
+      return null;
+    }
+    return payload;
+  } catch (err) {
+    toast('Network error. Backend check karo.', 'err');
+    return null;
+  }
+}
+
+function logout() {
+  localStorage.removeItem('keli_token');
+  window.location.href = '/admin';
+}
+
+function toggleDrawer() {
+  const sidebar = document.querySelector('.sidebar');
+  sidebar?.classList.toggle('closed');
+  localStorage.setItem('mni_sidebar_closed', sidebar?.classList.contains('closed') ? '1' : '0');
+}
+
+function restoreDrawerState() {
+  if (window.matchMedia('(max-width: 960px)').matches && !localStorage.getItem('mni_sidebar_closed')) {
+    localStorage.setItem('mni_sidebar_closed', '1');
+  }
+  if (localStorage.getItem('mni_sidebar_closed') === '1') {
+    document.querySelector('.sidebar')?.classList.add('closed');
+  }
+}
+
+// ── Panel navigation ──────────────────────────────────────────
+function showPanel(name) {
+  document.getElementById('panel-monitor')?.classList.remove('api-focus');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  const activeNav = document.querySelector(`.ni[onclick="showPanel('${name}')"]`);
+  if (activeNav) activeNav.classList.add('active');
+  document.getElementById('panel-title').textContent = PANELS[name] || name;
+  if (window.matchMedia('(max-width: 960px)').matches) {
+    document.querySelector('.sidebar')?.classList.add('closed');
+    localStorage.setItem('mni_sidebar_closed', '1');
+  }
+  const content = document.querySelector('.content');
+  if (content) content.scrollTop = 0;
+
+  // Load data for panel
+  if (name==='dashboard')     loadStats();
+  if (name==='command')       renderCommandChatHistory();
+  if (name==='access')        loadAuthSettings();
+  if (name==='ai')            loadAI();
+  if (name==='keli-core')     loadKeliCore();
+  if (name==='monitor')       loadMonitorPanel();
+  if (name==='personalities') loadPersonalities();
+  if (name==='apis')          loadApiKeys();
+  if (name==='integration')   loadPlatformTokens();
+  if (name==='automations')   loadN8nConfig();
+  if (name==='platform-bots') loadPlatformBots();
+  if (name==='moderation')    loadModerationEvents();
+  if (name==='features')      loadFeatures();
+  if (name==='localdata')     loadLocalData();
+  if (name==='blogs')         loadBlogs();
+  if (name==='outreach')      loadOutreach();
+  if (name==='data-agents')   loadDataAgents();
+  if (name==='users')         loadUsers();
+  if (name==='control')       loadControlCenter();
+  if (name==='logs')          loadLogs();
+  if (name==='forms')         loadFormSubmissions();
+  if (name==='emails')        loadEmailLogs();
+  if (name==='appointments')  loadAppointments();
+  if (name==='availability')  loadAvailabilityRules();
+}
+
+function showMonitorDeveloperApi() {
+  showPanel('monitor');
+  document.getElementById('panel-monitor')?.classList.add('api-focus');
+  document.getElementById('panel-title').textContent = 'MNI API';
+  setTimeout(() => {
+    const card = document.getElementById('monitor-developer-api-card');
+    if (card) card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }, 30);
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type==='err' ? '#2d1515' : '#1e1a3a';
+  t.style.borderColor = type==='err' ? '#991b1b' : '#7c3aed';
+  t.style.color = type==='err' ? '#fca5a5' : '#c4b5fd';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Access & Login ───────────────────────────────────────────
+function authNeedsPassword(method) {
+  return ['password','password_google_oauth'].includes(method || 'password');
+}
+
+function authNeedsGoogleOAuth(method) {
+  return ['google_oauth','password_google_oauth'].includes(method || '');
+}
+
+function syncAuthSettingsFields() {
+  const method = document.getElementById('auth-method')?.value || 'password';
+  const passwordWrap = document.getElementById('auth-password-wrap');
+  const googleOauthWrap = document.getElementById('auth-google-oauth-wrap');
+  if (passwordWrap) passwordWrap.style.display = authNeedsPassword(method) ? 'block' : 'none';
+  if (googleOauthWrap) googleOauthWrap.style.display = authNeedsGoogleOAuth(method) ? 'block' : 'none';
+}
+
+function renderAuthStatus(settings) {
+  const box = document.getElementById('auth-status-box');
+  if (!box) return;
+  const method = (settings.auth_method || 'password').replaceAll('_', ' + ');
+  box.innerHTML = `
+    <div><strong>Username:</strong> ${settings.username || 'admin'}</div>
+    <div><strong>Login method:</strong> ${method}</div>
+    <div><strong>Password:</strong> ${settings.password_enabled ? 'Set' : 'Not set'}</div>
+    <div><strong>Google button:</strong> ${settings.google_login_enabled ? 'Client ID set' : 'Not configured'}</div>
+    <div><strong>Allowed Google emails:</strong> ${settings.google_allowed_emails || 'Not set - Google login stays blocked'}</div>
+    <div><strong>Google admin users:</strong> ${settings.google_user_count || 0}</div>
+  `;
+}
+
+async function loadGoogleLoginHistory() {
+  const box = document.getElementById('google-login-history');
+  if (!box) return;
+  const data = await api('GET', '/api/auth/google-logins');
+  if (!data) {
+    box.textContent = 'Could not load Google login history.';
+    return;
+  }
+  const users = data.users || [];
+  const events = data.events || [];
+  box.innerHTML = `
+    <div style="margin-bottom:12px"><strong>Connected Google admins:</strong> ${users.length || 0}</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Last Login</th><th>Count</th></tr></thead>
+        <tbody>${users.length ? users.map(u => `
+          <tr>
+            <td>${u.email}</td>
+            <td>${u.name || '-'}</td>
+            <td><span class="tag ${u.is_active ? 'tag-green' : 'tag-red'}">${u.is_active ? 'Active' : 'Disabled'}</span></td>
+            <td>${u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '-'}</td>
+            <td>${u.login_count || 0}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="5" style="color:#555570">No Google admin users yet.</td></tr>'}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px"><strong>Recent attempts:</strong></div>
+    <div class="table-wrap" style="margin-top:8px">
+      <table>
+        <thead><tr><th>Time</th><th>Email</th><th>Result</th><th>Reason</th><th>IP</th></tr></thead>
+        <tbody>${events.length ? events.slice(0, 20).map(e => `
+          <tr>
+            <td>${e.created_at ? new Date(e.created_at).toLocaleString() : '-'}</td>
+            <td>${e.email || '-'}</td>
+            <td><span class="tag ${e.success ? 'tag-green' : 'tag-red'}">${e.success ? 'Success' : 'Blocked'}</span></td>
+            <td>${e.reason || '-'}</td>
+            <td>${e.ip_address || '-'}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="5" style="color:#555570">No Google login attempts yet.</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function loadAuthSettings() {
+  const settings = await api('GET', '/api/auth/settings');
+  if (!settings) return;
+  authSettingsCache = settings;
+  document.getElementById('auth-username').value = settings.username || 'admin';
+  document.getElementById('auth-method').value = settings.auth_method || 'password';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-google-client-id').value = settings.google_login_client_id || '';
+  document.getElementById('auth-google-allowed-emails').value = settings.google_allowed_emails || '';
+  renderAuthStatus(settings);
+  syncAuthSettingsFields();
+  loadGoogleLoginHistory();
+}
+
+async function saveAuthSettings() {
+  const body = {
+    username: document.getElementById('auth-username').value.trim(),
+    auth_method: document.getElementById('auth-method').value,
+    password: document.getElementById('auth-password').value,
+    google_client_id: document.getElementById('auth-google-client-id').value,
+    google_allowed_emails: document.getElementById('auth-google-allowed-emails').value,
+  };
+  const result = await api('POST', '/api/auth/settings', body);
+  if (!result?.success) return;
+  authSettingsCache = result.settings || {};
+  renderAuthStatus(authSettingsCache);
+  document.getElementById('auth-password').value = '';
+  syncAuthSettingsFields();
+  loadGoogleLoginHistory();
+  toast('Login settings saved');
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+async function loadStats() {
+  const d = await api('GET','/api/admin/stats');
+  if (!d) return;
+  document.getElementById('s-users').textContent   = d.total_users;
+  document.getElementById('s-msgs').textContent    = d.total_messages;
+  document.getElementById('s-blocked').textContent = d.blocked_users;
+  document.getElementById('s-apis').textContent    = d.total_apikeys ?? 0;
+  updateDrawerStats(d);
+
+  renderMiniChart('platform-stats', d.by_platform || {});
+  renderMiniChart('type-stats', d.by_type || {});
+}
+
+function updateDrawerStats(d) {
+  const max = Math.max(Number(d.total_users) || 0, Number(d.total_messages) || 0, Number(d.total_apikeys) || 0, 1);
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.style.width = `${Math.max(8, Math.round((Number(value) || 0) / max * 100))}%`;
+  };
+  set('drawer-users-bar', d.total_users);
+  set('drawer-msgs-bar', d.total_messages);
+  set('drawer-apis-bar', d.total_apikeys);
+}
+
+function renderMiniChart(id, data) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const entries = Object.entries(data || {});
+  if (!entries.length) {
+    el.innerHTML = '<div style="color:#706b63;font-size:13px">No activity yet.</div>';
+    return;
+  }
+  const max = Math.max(...entries.map(([,v]) => Number(v) || 0), 1);
+  el.innerHTML = entries.map(([label, value]) => {
+    const pct = Math.max(4, Math.round((Number(value) || 0) / max * 100));
+    return `
+      <div class="chart-row">
+        <div style="text-transform:capitalize;color:#706b63">${label}</div>
+        <div class="chart-track"><div class="chart-fill" style="width:${pct}%"></div></div>
+        <strong>${value}</strong>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCommandChatHistory() {
+  const wrap = document.getElementById('command-chat-results');
+  if (!wrap) return;
+  if (!commandChatHistory.length) {
+    wrap.innerHTML = '<div class="chat-bubble ai">Hi, I am MNI. Ask me about users, bot replies, data sources, automations, or setup.</div>';
+    return;
+  }
+  wrap.innerHTML = commandChatHistory.map(item => `
+    <div class="chat-bubble ${item.role === 'user' ? 'user' : 'ai'}">${item.content || ''}</div>
+  `).join('');
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function prefillCommand(text) {
+  showPanel('command');
+  document.getElementById('command-chat-message').value = text;
+}
+
+function openN8nPanel() {
+  showPanel('automations');
+  setTimeout(loadN8nConfig, 50);
+}
+
+function sendHomeCommand() {
+  const homeInput = document.getElementById('home-chat-message');
+  const commandInput = document.getElementById('command-chat-message');
+  const message = homeInput?.value.trim() || '';
+  if (!message) {
+    toast('Ask MNI something first', 'err');
+    return;
+  }
+  showPanel('command');
+  commandInput.value = message;
+  homeInput.value = '';
+  runCommandChat();
+}
+
+async function runCommandChat() {
+  const input = document.getElementById('command-chat-message');
+  const action = document.getElementById('command-action')?.value || 'chat';
+  let message = input.value.trim();
+  const fileText = await readCommandFileText();
+  if (fileText) {
+    message = `${message || 'Explain this file for me.'}\n\nAttached file content:\n${fileText}`;
+  }
+  if (!message) {
+    toast('Ask MNI something first', 'err');
+    return;
+  }
+  commandChatHistory.push({role:'user', content:message});
+  renderCommandChatHistory();
+  input.value = '';
+  clearCommandFile();
+  let reply = '';
+  if (action === 'n8n') {
+    const result = await api('POST', '/api/admin/n8n/trigger', { message, source: 'admin_chat' });
+    reply = result?.success
+      ? `n8n workflow triggered.\n\n${JSON.stringify(result.response || result, null, 2)}`
+      : (result?.error || 'n8n trigger failed. Open Automations and check webhook URL.');
+  } else {
+    const result = await api('POST', '/api/admin/monitor/chat', {
+      message,
+      history: commandChatHistory.slice(-10),
+    });
+    reply = result?.response || 'I could not answer that yet. Check AI Providers and make sure a text API key is active.';
+  }
+  commandChatHistory.push({role:'assistant', content: reply});
+  renderCommandChatHistory();
+}
+
+function clearCommandFile() {
+  const fileInput = document.getElementById('command-file');
+  if (fileInput) fileInput.value = '';
+  const chip = document.getElementById('command-file-chip');
+  if (chip) chip.textContent = 'No file selected';
+}
+
+async function readCommandFileText() {
+  const fileInput = document.getElementById('command-file');
+  const file = fileInput?.files?.[0];
+  if (!file) return '';
+  document.getElementById('command-file-chip').textContent = file.name;
+  if (file.size > 150000) {
+    toast('File too large. Use a text file under 150KB.', 'err');
+    return '';
+  }
+  return await file.text();
+}
+
+function bindCommandComposer() {
+  const fileInput = document.getElementById('command-file');
+  fileInput?.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    document.getElementById('command-file-chip').textContent = file ? file.name : 'No file selected';
+  });
+  document.getElementById('command-chat-message')?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      runCommandChat();
+    }
+  });
+}
+
+// ── AI & RAG ──────────────────────────────────────────────────
+async function loadAI() {
+  const r = await api('GET','/api/admin/rag');
+  if (r) document.getElementById('rag-prompt').value = r.rag_prompt || '';
+  const c = await api('GET','/api/admin/config');
+  if (c) {
+    document.getElementById('cfg-personality').value = c.personality || '';
+    document.getElementById('cfg-tone').value = c.tone || '';
+  }
+}
+
+async function saveRAG() {
+  const prompt = document.getElementById('rag-prompt').value;
+  const r = await api('POST','/api/admin/rag',{rag_prompt: prompt});
+  if (r?.success) toast('RAG brain updated! 🧠');
+  else toast('Save failed','err');
+}
+
+async function uploadRAGFile() {
+  const input = document.getElementById('rag-file');
+  const file = input.files?.[0];
+  if (!file) { toast('Choose a RAG file first','err'); return; }
+  const r = await uploadFile('/api/admin/rag/upload', file);
+  if (r?.success) {
+    document.getElementById('rag-prompt').value = r.rag_prompt || '';
+    input.value = '';
+    toast('RAG file uploaded and applied! 🧠');
+  } else {
+    toast(r?.error || 'Upload failed','err');
+  }
+}
+
+async function savePersonality() {
+  const r = await api('POST','/api/admin/config',{
+    personality: document.getElementById('cfg-personality').value,
+    tone:        document.getElementById('cfg-tone').value,
+  });
+  if (r?.success) toast('Personality saved 😎');
+  else toast('Save failed','err');
+}
+
+// ── MNI Core ───────────────────────────────────────────────
+async function loadKeliCore() {
+  const data = await api('GET','/api/admin/keli-core/config');
+  if (!data) return;
+  const cfg = data.config || {};
+  document.getElementById('keli-enabled').checked = !!cfg.keli_core_enabled;
+  document.getElementById('keli-name').value = cfg.keli_core_name || 'MNI Core';
+  document.getElementById('keli-provider').value = cfg.keli_core_text_provider || 'sarvam';
+  document.getElementById('keli-voice-gender').value = cfg.keli_core_voice_gender || 'female';
+  document.getElementById('keli-voice-tone').value = cfg.keli_core_voice_tone || 'soft';
+  document.getElementById('keli-prefer-local').checked = !!cfg.keli_core_prefer_local_tools;
+  document.getElementById('keli-stt-enabled').checked = !!cfg.keli_core_stt_enabled;
+  document.getElementById('keli-tts-enabled').checked = !!cfg.keli_core_tts_enabled;
+  document.getElementById('keli-system-prompt').value = cfg.keli_core_system_prompt || '';
+  document.getElementById('keli-call-webhook').value = cfg.keli_core_voice_call_webhook || '';
+  document.getElementById('keli-call-secret').value = cfg.keli_core_voice_call_secret || '';
+  document.getElementById('keli-test-voice-gender').value = cfg.keli_core_voice_gender || 'female';
+  document.getElementById('keli-test-voice-tone').value = cfg.keli_core_voice_tone || 'soft';
+
+  const providerState = data.providers?.sarvam_configured ? 'Sarvam ready' : 'Sarvam key missing';
+  const webhookState = data.providers?.voice_call_connector ? 'Voice call webhook connected' : 'Voice call webhook not set';
+  document.getElementById('keli-capabilities').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <span class="tag ${data.providers?.sarvam_configured ? 'tag-green' : 'tag-amber'}">${providerState}</span>
+      <span class="tag ${data.providers?.voice_call_connector ? 'tag-green' : 'tag-blue'}">${webhookState}</span>
+    </div>
+    ${(data.capabilities || []).map(item => `<div style="margin-bottom:6px">• ${item}</div>`).join('')}
+  `;
+}
+
+async function loadMonitorPanel() {
+  const data = await api('GET','/api/admin/monitor/overview');
+  if (!data) return;
+
+  const credWrap = document.getElementById('monitor-credentials');
+  const credentials = data.credentials || {};
+  credWrap.innerHTML = Object.entries(credentials).map(([key, enabled]) => `
+    <div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #1e1e2e">
+      <span>${key}</span>
+      <span class="tag ${enabled ? 'tag-green' : 'tag-red'}">${enabled ? 'Configured' : 'Missing'}</span>
+    </div>
+  `).join('');
+
+  const dbWrap = document.getElementById('monitor-database');
+  const database = data.database || {};
+  dbWrap.innerHTML = `
+    <div style="font-weight:600;color:#e2e2f0;margin-bottom:10px">Database Diagnostics</div>
+    <div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #1e1e2e">
+      <span>Mode</span>
+      <span class="tag tag-blue">${database.mode || 'unknown'}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #1e1e2e">
+      <span>Source</span>
+      <span class="tag ${database.env_override ? 'tag-amber' : 'tag-green'}">${database.source || 'unknown'}</span>
+    </div>
+    <div style="padding:6px 0;border-bottom:1px solid #1e1e2e">
+      <div style="color:#8080a0;font-size:11px;margin-bottom:4px">Active connection</div>
+      <div style="word-break:break-all">${database.active_uri_masked || 'Not available'}</div>
+    </div>
+    <div style="padding:6px 0;border-bottom:1px solid #1e1e2e">
+      <div style="color:#8080a0;font-size:11px;margin-bottom:4px">Saved next database</div>
+      <div style="word-break:break-all">${database.saved_database_url_masked || 'Not set'}</div>
+    </div>
+    <div style="padding:6px 0">
+      <div style="color:#8080a0;font-size:11px;margin-bottom:4px">Notes</div>
+      <div>${database.database_label || 'No label saved'}${database.database_ssl_mode ? ` • sslmode=${database.database_ssl_mode}` : ''}${database.restart_required_for_saved_changes ? ' • restart required after DB change' : ''}</div>
+    </div>
+  `;
+
+  const apiWrap = document.getElementById('monitor-api-keys');
+  const apiKeys = data.api_keys || [];
+  apiWrap.innerHTML = apiKeys.length ? apiKeys.map(item => `
+    <div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #1e1e2e">
+      <span>${item.name} <span style="color:#8080a0">(${item.category}/${item.provider})</span></span>
+      <span class="tag ${item.is_active ? 'tag-green' : 'tag-red'}">${item.is_active ? 'Active' : 'Disabled'}${item.fail_count ? ` • fails ${item.fail_count}` : ''}</span>
+    </div>
+  `).join('') : '<div style="color:#555570">No API keys configured.</div>';
+
+  developerClientCache = data.developer_clients || [];
+  developerSourceCatalog = [
+    ...((data.local_sources || []).map(item => ({
+      key: item.key,
+      label: item.name,
+      meta: item.is_enabled ? 'enabled source' : 'disabled source',
+    }))),
+    ...((data.data_agents || []).map(agent => ({
+      key: `agent:${agent.name}`,
+      label: `Agent: ${agent.name}`,
+      meta: `${agent.mode || 'idle'} • ${agent.source_url || 'no url'}`,
+    }))),
+  ];
+  renderDeveloperClientFormOptions();
+  renderDeveloperClientList();
+
+  const agentWrap = document.getElementById('monitor-agent-results');
+  const agents = data.data_agents || [];
+  agentWrap.innerHTML = agents.length ? agents.map(agent => `
+    <div style="padding:10px 0;border-bottom:1px solid #1e1e2e">
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <strong style="color:#e2e2f0">${agent.name}</strong>
+        <span class="tag ${agent.mode === 'active' ? 'tag-green' : 'tag-blue'}">${agent.mode}</span>
+      </div>
+      <div style="font-size:11px;color:#8080a0;margin-top:4px">${agent.source_url || 'No source URL'}</div>
+      <div style="font-size:11px;color:#8080a0;margin-top:4px">Status: ${agent.last_status || 'idle'}${agent.last_fetched_at ? ` • fetched ${new Date(agent.last_fetched_at).toLocaleString()}` : ''}</div>
+      <div style="font-size:12px;color:#c4c4e0;margin-top:6px;white-space:pre-wrap">${agent.last_snapshot || 'No snapshot yet.'}</div>
+    </div>
+  `).join('') : '<div style="color:#555570">No data agents found.</div>';
+
+  const messageRows = data.recent_messages || [];
+  const msgTable = document.getElementById('monitor-messages-table');
+  msgTable.innerHTML = messageRows.length ? messageRows.map(row => `
+    <tr>
+      <td style="font-size:11px;color:#555570">${new Date(row.timestamp).toLocaleString()}</td>
+      <td><span class="tag tag-blue">${row.platform}</span></td>
+      <td>${row.username}</td>
+      <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${row.content || ''}">${row.content || ''}</td>
+      <td>${row.api_used || '—'}</td>
+      <td><span class="tag ${row.status === 'ok' ? 'tag-green' : 'tag-red'}">${row.status || '—'}</span></td>
+    </tr>
+  `).join('') : '<tr><td colspan="6" style="color:#555570">No recent messages.</td></tr>';
+
+  monitorChatHistory = (data.monitor_messages || []).map(row => ([
+    {role: 'user', content: row.content || ''},
+    {role: 'assistant', content: row.response || ''}
+  ])).flat().slice(-12);
+  renderMonitorChatHistory();
+}
+
+function renderDeveloperClientFormOptions(selectedFeatures = ['chat'], selectedSources = []) {
+  const featureWrap = document.getElementById('dev-feature-options');
+  const sourceWrap = document.getElementById('dev-source-options');
+  if (featureWrap) {
+    featureWrap.innerHTML = developerFeatureOptions.map(item => `
+      <label style="display:flex;gap:10px;align-items:center;padding:10px 12px;background:#fff;border:1px solid var(--line-2);border-radius:8px;cursor:pointer">
+        <input type="checkbox" class="dev-feature-checkbox" value="${item.key}" ${selectedFeatures.includes(item.key) ? 'checked' : ''} style="width:auto">
+        <span>${item.label}</span>
+      </label>
+    `).join('');
+  }
+  if (sourceWrap) {
+    sourceWrap.innerHTML = developerSourceCatalog.length ? developerSourceCatalog.map(item => `
+      <label style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#fff;border:1px solid var(--line-2);border-radius:8px;cursor:pointer">
+        <input type="checkbox" class="dev-source-checkbox" value="${item.key}" ${selectedSources.includes(item.key) ? 'checked' : ''} style="width:auto;margin-top:2px">
+        <span>
+          <div>${item.label}</div>
+          <div style="font-size:11px;color:#8080a0;margin-top:3px">${item.meta || ''}</div>
+        </span>
+      </label>
+    `).join('') : '<div style="color:#555570">No local sources or data agents found.</div>';
+  }
+}
+
+function getSelectedDeveloperValues(selector) {
+  return Array.from(document.querySelectorAll(selector))
+    .filter(el => el.checked)
+    .map(el => el.value);
+}
+
+function resetDeveloperClientForm() {
+  document.getElementById('dev-client-id').value = '';
+  document.getElementById('dev-client-name').value = '';
+  document.getElementById('dev-client-slug').value = '';
+  document.getElementById('dev-client-webhook-slug').value = '';
+  renderDeveloperClientFormOptions(['chat'], []);
+}
+
+function editDeveloperClient(id) {
+  const client = developerClientCache.find(item => item.id === id);
+  if (!client) return;
+  document.getElementById('dev-client-id').value = client.id;
+  document.getElementById('dev-client-name').value = client.name || '';
+  document.getElementById('dev-client-slug').value = client.slug || '';
+  document.getElementById('dev-client-webhook-slug').value = client.webhook_slug || '';
+  renderDeveloperClientFormOptions(client.allowed_features || ['chat'], client.allowed_sources || []);
+  document.getElementById('dev-api-endpoint').textContent = client.api_endpoint || 'Loading...';
+  document.getElementById('dev-webhook-endpoint').textContent = client.webhook_url || 'Create a client first.';
+}
+
+function renderDeveloperClientList() {
+  const wrap = document.getElementById('dev-client-list');
+  const endpointWrap = document.getElementById('dev-api-endpoint');
+  const webhookWrap = document.getElementById('dev-webhook-endpoint');
+  if (endpointWrap && developerClientCache[0]?.api_endpoint) endpointWrap.textContent = developerClientCache[0].api_endpoint;
+  if (!wrap) return;
+  if (!developerClientCache.length) {
+    wrap.innerHTML = '<div style="color:#555570">No MNI API keys yet.</div>';
+    if (webhookWrap) webhookWrap.textContent = 'Create a client first.';
+    return;
+  }
+  if (webhookWrap && !document.getElementById('dev-client-id').value) {
+    webhookWrap.textContent = developerClientCache[0].webhook_url || 'Create a client first.';
+  }
+  wrap.innerHTML = developerClientCache.map(client => `
+    <div style="padding:14px 0;border-bottom:1px solid var(--line-2)">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:700;color:var(--text)">${client.name}</div>
+          <div style="font-size:11px;color:#8080a0;margin-top:4px">slug: ${client.slug} • key: ${client.api_key}</div>
+          <div style="font-size:11px;color:#8080a0;margin-top:4px">webhook: ${client.webhook_url || '—'}</div>
+          <div style="font-size:11px;color:#8080a0;margin-top:4px">last used: ${client.last_used_at ? new Date(client.last_used_at).toLocaleString() : 'never'}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+          <span class="tag ${client.is_active ? 'tag-green' : 'tag-red'}">${client.is_active ? 'Active' : 'Disabled'}</span>
+          <button class="btn btn-sm btn-outline" onclick="editDeveloperClient(${client.id})">Edit</button>
+          <button class="btn btn-sm btn-outline" onclick="regenerateDeveloperClientKey(${client.id})">Regenerate Key</button>
+          <button class="btn btn-sm ${client.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleDeveloperClient(${client.id})">${client.is_active ? 'Disable' : 'Enable'}</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteDeveloperClient(${client.id})">Delete</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:10px">
+        powers: ${(client.allowed_features || []).join(', ') || 'chat'}
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">
+        sources: ${(client.allowed_sources || []).join(', ') || 'default app behavior'}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function saveDeveloperClient() {
+  const clientId = document.getElementById('dev-client-id').value;
+  const body = {
+    name: document.getElementById('dev-client-name').value.trim(),
+    slug: document.getElementById('dev-client-slug').value.trim(),
+    webhook_slug: document.getElementById('dev-client-webhook-slug').value.trim(),
+    allowed_features: getSelectedDeveloperValues('.dev-feature-checkbox'),
+    allowed_sources: getSelectedDeveloperValues('.dev-source-checkbox'),
+  };
+  if (!body.name) {
+    toast('Client name likho pehle', 'err');
+    return;
+  }
+  const path = clientId ? `/api/admin/developer-clients/${clientId}` : '/api/admin/developer-clients';
+  const method = clientId ? 'PUT' : 'POST';
+  const result = await api(method, path, body);
+  if (!result?.success) return;
+  if (result.client?.plain_api_key) {
+    document.getElementById('dev-generated-key').textContent = result.client.plain_api_key;
+  }
+  resetDeveloperClientForm();
+  await loadMonitorPanel();
+  toast(clientId ? 'MNI API updated ✅' : 'MNI API key generated ✅');
+}
+
+async function toggleDeveloperClient(id) {
+  const result = await api('POST', `/api/admin/developer-clients/${id}/toggle`);
+  if (!result?.success) return;
+  await loadMonitorPanel();
+  toast('MNI API status updated');
+}
+
+async function regenerateDeveloperClientKey(id) {
+  const result = await api('POST', `/api/admin/developer-clients/${id}/regenerate`);
+  if (!result?.success) return;
+  document.getElementById('dev-generated-key').textContent = result.client?.plain_api_key || 'Key regenerated.';
+  await loadMonitorPanel();
+  toast('New API key generated ✅');
+}
+
+async function deleteDeveloperClient(id) {
+  if (!confirm('Delete this MNI API key?')) return;
+  const result = await api('DELETE', `/api/admin/developer-clients/${id}`);
+  if (!result?.success) return;
+  resetDeveloperClientForm();
+  await loadMonitorPanel();
+  toast('MNI API key removed');
+}
+
+async function runSourceDebug() {
+  const message = document.getElementById('monitor-debug-message').value.trim();
+  const data = await api('GET', `/api/admin/local-data/debug?message=${encodeURIComponent(message)}`);
+  const wrap = document.getElementById('monitor-source-results');
+  const rows = data?.sources || [];
+  if (!rows.length) {
+    wrap.innerHTML = '<div style="color:#555570">No source debug data available.</div>';
+    return;
+  }
+  const summary = data?.summary || {};
+  wrap.innerHTML = rows.map(row => `
+    <div style="padding:12px 0;border-bottom:1px solid #1e1e2e">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+        <strong style="color:#e2e2f0">${row.name}</strong>
+        <span class="tag ${row.status === 'ok' ? 'tag-green' : row.status === 'error' ? 'tag-red' : 'tag-amber'}">${row.enabled ? row.status : 'disabled'}</span>
+      </div>
+      <div style="font-size:11px;color:#8080a0;margin-top:6px">${row.fetched_from || row.endpoint || row.description || 'No source reference'}</div>
+      <div style="font-size:12px;color:#c4c4e0;white-space:pre-wrap;margin-top:8px">${row.preview || 'No data returned.'}</div>
+    </div>
+  `).join('');
+  wrap.innerHTML = `
+    <div style="margin-bottom:12px;color:#8080a0">Sources checked: ${summary.total || rows.length} • enabled: ${summary.enabled || 0} • returned data: ${summary.with_data || 0}</div>
+    ${wrap.innerHTML}
+  `;
+}
+
+function renderMonitorChatHistory() {
+  const wrap = document.getElementById('monitor-chat-results');
+  if (!wrap) return;
+  if (!monitorChatHistory.length) {
+    wrap.innerHTML = 'No internal AI chat yet.';
+    return;
+  }
+  wrap.innerHTML = monitorChatHistory.map(item => `
+    <div style="padding:12px 0;border-bottom:1px solid #1e1e2e">
+      <div style="font-size:11px;color:#8080a0;margin-bottom:6px">${item.role === 'user' ? 'Admin' : 'AI'}</div>
+      <div style="font-size:13px;color:#e2e2f0;white-space:pre-wrap">${item.content || ''}</div>
+    </div>
+  `).join('');
+}
+
+async function runMonitorChat() {
+  const message = document.getElementById('monitor-chat-message').value.trim();
+  if (!message) {
+    toast('Monitor chat message likho pehle', 'err');
+    return;
+  }
+  const result = await api('POST', '/api/admin/monitor/chat', {
+    message,
+    history: monitorChatHistory.slice(-10),
+  });
+  if (!result?.success) return;
+  monitorChatHistory.push({role: 'user', content: message});
+  monitorChatHistory.push({role: 'assistant', content: result.response || ''});
+  document.getElementById('monitor-chat-message').value = '';
+  renderMonitorChatHistory();
+  const debugWrap = document.getElementById('monitor-source-results');
+  const rows = result.sources || [];
+  if (debugWrap && rows.length) {
+    debugWrap.innerHTML = rows.map(row => `
+      <div style="padding:12px 0;border-bottom:1px solid #1e1e2e">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+          <strong style="color:#e2e2f0">${row.name}</strong>
+          <span class="tag ${row.status === 'ok' ? 'tag-green' : row.status === 'error' ? 'tag-red' : 'tag-amber'}">${row.enabled ? row.status : 'disabled'}</span>
+        </div>
+        <div style="font-size:11px;color:#8080a0;margin-top:6px">${row.fetched_from || row.endpoint || row.description || 'No source reference'}</div>
+        <div style="font-size:12px;color:#c4c4e0;white-space:pre-wrap;margin-top:8px">${row.preview || 'No data returned.'}</div>
+      </div>
+    `).join('');
+  }
+  toast('Monitor AI response ready ✨');
+}
+
+function clearMonitorChat() {
+  monitorChatHistory = [];
+  renderMonitorChatHistory();
+}
+
+async function saveKeliCoreConfig() {
+  const body = {
+    keli_core_enabled: document.getElementById('keli-enabled').checked,
+    keli_core_name: document.getElementById('keli-name').value,
+    keli_core_text_provider: document.getElementById('keli-provider').value,
+    keli_core_voice_gender: document.getElementById('keli-voice-gender').value,
+    keli_core_voice_tone: document.getElementById('keli-voice-tone').value,
+    keli_core_prefer_local_tools: document.getElementById('keli-prefer-local').checked,
+    keli_core_stt_enabled: document.getElementById('keli-stt-enabled').checked,
+    keli_core_tts_enabled: document.getElementById('keli-tts-enabled').checked,
+    keli_core_system_prompt: document.getElementById('keli-system-prompt').value,
+    keli_core_voice_call_webhook: document.getElementById('keli-call-webhook').value,
+    keli_core_voice_call_secret: document.getElementById('keli-call-secret').value,
+  };
+  const result = await api('POST','/api/admin/keli-core/config', body);
+  if (result?.success) {
+    toast('MNI Core saved ✅');
+    loadKeliCore();
+  } else {
+    toast(result?.error || 'Save failed','err');
+  }
+}
+
+async function runKeliCoreTest() {
+  const message = document.getElementById('keli-test-message').value.trim();
+  if (!message) {
+    toast('Test message likho pehle','err');
+    return;
+  }
+  const result = await api('POST','/api/admin/keli-core/test', {
+    message,
+    speak_response: document.getElementById('keli-speak-response').checked,
+    voice_gender: document.getElementById('keli-test-voice-gender').value,
+    voice_tone: document.getElementById('keli-test-voice-tone').value,
+  });
+  if (!result) return;
+  renderKeliCoreResult(result);
+  if (result.success) toast('MNI Core test complete ✨');
+  else toast(result.error || result.response || 'MNI Core test failed','err');
+}
+
+function renderKeliCoreResult(result) {
+  document.getElementById('keli-result-meta').textContent =
+    `Intent: ${result.intent || 'unknown'} | Type: ${result.type || 'text'} | API: ${result.api_used || 'n/a'}`;
+  document.getElementById('keli-result-text').textContent = result.response || result.error || '';
+
+  const audio = document.getElementById('keli-result-audio');
+  if (result.audio_base64) {
+    audio.src = `data:${result.audio_mime || 'audio/mpeg'};base64,${result.audio_base64}`;
+    audio.style.display = 'block';
+  } else {
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+    audio.style.display = 'none';
+  }
+}
+
+async function transcribeKeliAudio() {
+  const input = document.getElementById('keli-audio-file');
+  const file = input.files?.[0];
+  if (!file) {
+    toast('Audio file choose karo','err');
+    return;
+  }
+  const result = await uploadFile('/api/admin/keli-core/transcribe', file);
+  const box = document.getElementById('keli-transcript-box');
+  if (result?.success) {
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div class="plat-card-title">Transcript</div>
+      <div style="white-space:pre-wrap;font-size:13px;line-height:1.6">${result.transcript}</div>
+    `;
+    document.getElementById('keli-test-message').value = result.transcript || '';
+    toast('Audio transcribed ✅');
+  } else {
+    box.style.display = 'block';
+    box.innerHTML = `<div style="color:#fca5a5">${result?.error || 'Transcription failed'}</div>`;
+    toast(result?.error || 'Transcription failed','err');
+  }
+}
+
+async function cloneKeliVoice() {
+  const file = document.getElementById('keli-clone-file').files?.[0];
+  const text = document.getElementById('keli-clone-text').value.trim();
+  if (!file || !text) {
+    toast('Clone text aur reference audio dono chahiye','err');
+    return;
+  }
+  const form = new FormData();
+  form.append('file', file);
+  form.append('text', text);
+  const result = await uploadForm('/api/admin/keli-core/clone-voice', form);
+  if (!result) return;
+  renderKeliCoreResult({
+    success: result.success,
+    intent: 'voice_clone',
+    type: 'voice',
+    api_used: 'xtts-local',
+    response: result.message || 'Voice clone generated',
+    audio_base64: result.audio_base64,
+    audio_mime: result.audio_mime,
+    error: result.error,
+  });
+  if (result.success) toast('Voice clone ready ✅');
+  else toast(result.error || 'Voice clone failed','err');
+}
+
+// ── Local Data ───────────────────────────────────────────────
+async function loadLocalData() {
+  const rows = await api('GET','/api/admin/local-data');
+  const wrap = document.getElementById('local-data-list');
+  if (!rows?.length) {
+    wrap.innerHTML = '<div style="color:#555570">No local data sources configured.</div>';
+    return;
+  }
+  wrap.innerHTML = rows.map(row => `
+    <div class="toggle-wrap">
+      <div class="toggle-info">
+        <div class="toggle-name">${row.name}</div>
+        <div class="toggle-desc">${row.description || ''}</div>
+      </div>
+      <button class="btn ${row.is_enabled ? 'btn-success' : 'btn-outline'}" onclick="toggleLocalData(${row.id})">
+        ${row.is_enabled ? 'Enabled' : 'Disabled'}
+      </button>
+    </div>
+  `).join('');
+}
+
+async function toggleLocalData(id) {
+  const result = await api('POST', `/api/admin/local-data/${id}/toggle`);
+  if (result?.success) {
+    toast(`Source ${result.is_enabled ? 'enabled' : 'disabled'} ✅`);
+  }
+  loadLocalData();
+}
+
+// ── Blogs ────────────────────────────────────────────────────
+function resetBlogForm() {
+  document.getElementById('blog-id').value = '';
+  document.getElementById('blog-title').value = '';
+  document.getElementById('blog-slug').value = '';
+  document.getElementById('blog-summary').value = '';
+  document.getElementById('blog-tags').value = '';
+  document.getElementById('blog-seo-title').value = '';
+  document.getElementById('blog-seo-description').value = '';
+  document.getElementById('blog-status').value = 'draft';
+  document.getElementById('blog-enabled').checked = true;
+  document.getElementById('blog-content').value = '';
+}
+
+function editBlog(id) {
+  const post = blogCache.find(item => item.id === id);
+  if (!post) return;
+  document.getElementById('blog-id').value = post.id || '';
+  document.getElementById('blog-title').value = post.title || '';
+  document.getElementById('blog-slug').value = post.slug || '';
+  document.getElementById('blog-summary').value = post.summary || '';
+  document.getElementById('blog-tags').value = post.tags || '';
+  document.getElementById('blog-seo-title').value = post.seo_title || '';
+  document.getElementById('blog-seo-description').value = post.seo_description || '';
+  document.getElementById('blog-status').value = post.status || 'draft';
+  document.getElementById('blog-enabled').checked = !!post.is_enabled;
+  document.getElementById('blog-content').value = post.content || '';
+}
+
+async function loadBlogs() {
+  const posts = await api('GET','/api/admin/blogs');
+  blogCache = posts || [];
+  const tbody = document.getElementById('blog-table');
+  if (!posts?.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:#555570">No blogs yet. Write your first one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = posts.map(post => `
+    <tr>
+      <td>${post.title}</td>
+      <td>${post.slug}</td>
+      <td><span class="tag ${post.status==='published' ? 'tag-green' : 'tag-amber'}">${post.status}</span></td>
+      <td><span class="tag ${post.is_enabled ? 'tag-green' : 'tag-red'}">${post.is_enabled ? 'Enabled' : 'Disabled'}</span></td>
+      <td>${post.updated_at ? new Date(post.updated_at).toLocaleString() : '—'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-outline" onclick="editBlog(${post.id})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteBlog(${post.id})">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function saveBlog() {
+  const blogId = document.getElementById('blog-id').value;
+  const body = {
+    title: document.getElementById('blog-title').value,
+    slug: document.getElementById('blog-slug').value,
+    summary: document.getElementById('blog-summary').value,
+    tags: document.getElementById('blog-tags').value,
+    seo_title: document.getElementById('blog-seo-title').value,
+    seo_description: document.getElementById('blog-seo-description').value,
+    status: document.getElementById('blog-status').value,
+    is_enabled: document.getElementById('blog-enabled').checked,
+    content: document.getElementById('blog-content').value
+  };
+  if (!body.title || !body.content) { toast('Blog title and content required','err'); return; }
+  const method = blogId ? 'PUT' : 'POST';
+  const path = blogId ? `/api/admin/blogs/${blogId}` : '/api/admin/blogs';
+  const r = await api(method, path, body);
+  if (r?.success) {
+    toast(blogId ? 'Blog updated' : 'Blog created');
+    resetBlogForm();
+    loadBlogs();
+  } else {
+    toast(r?.error || 'Blog save failed', 'err');
+  }
+}
+
+async function deleteBlog(id) {
+  if (!confirm('Delete this blog post?')) return;
+  await api('DELETE', `/api/admin/blogs/${id}`);
+  loadBlogs();
+}
+
+// ── API Keys ──────────────────────────────────────────────────
+async function loadApiKeys() {
+  const keys = await api('GET','/api/admin/apikeys');
+  const tbody = document.getElementById('api-keys-table');
+  if (!keys || !keys.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="color:#555570">No API keys yet. Add one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = keys.map(k => `
+    <tr>
+      <td>${k.name}</td>
+      <td><span class="tag tag-purple">${k.category}</span></td>
+      <td>${k.provider}</td>
+      <td style="font-family:monospace;font-size:11px;color:#7c3aed">${k.api_key}</td>
+      <td>${k.priority} ${k.is_primary?'<span class="tag tag-green">Primary</span>':''}</td>
+      <td><span class="tag ${k.is_active?'tag-green':'tag-red'}">${k.is_active?'Active':'Disabled'}</span></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-outline" onclick="toggleKey(${k.id})">Toggle</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteKey(${k.id})">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function addApiKey() {
+  const body = {
+    name:       document.getElementById('api-name').value,
+    category:   document.getElementById('api-category').value,
+    provider:   document.getElementById('api-provider').value,
+    api_key:    document.getElementById('api-key-val').value,
+    priority:   parseInt(document.getElementById('api-priority').value)||1,
+    is_primary: document.getElementById('api-primary').checked,
+  };
+  if (!body.name || !body.api_key) { toast('Fill all fields','err'); return; }
+  const r = await api('POST','/api/admin/apikeys', body);
+  if (r?.success) { toast('API key added ✅'); loadApiKeys(); }
+  else toast('Failed to add','err');
+}
+
+async function toggleKey(id) {
+  await api('POST',`/api/admin/apikeys/${id}/toggle`);
+  loadApiKeys();
+}
+
+async function deleteKey(id) {
+  if (!confirm('Delete this API key?')) return;
+  await api('DELETE',`/api/admin/apikeys/${id}`);
+  loadApiKeys();
+  toast('Key deleted');
+}
+
+// ── Automations / n8n ────────────────────────────────────────
+async function loadN8nConfig() {
+  const d = await api('GET', '/api/admin/n8n/config');
+  if (!d) return;
+  document.getElementById('n8n-url').value = d.n8n_url || '';
+  document.getElementById('n8n-api-key').value = '';
+  document.getElementById('n8n-webhook-url').value = d.n8n_webhook_url || '';
+  document.getElementById('n8n-trigger-keyword').value = d.n8n_trigger_keyword || '/workflow';
+  document.getElementById('n8n-test-result').textContent = d.n8n_api_key_set ? 'API key saved.' : 'API key not set yet.';
+  loadN8nWorkflows();
+}
+
+async function saveN8nConfig() {
+  const result = await api('POST', '/api/admin/n8n/config', {
+    n8n_url: document.getElementById('n8n-url').value,
+    n8n_api_key: document.getElementById('n8n-api-key').value,
+    n8n_webhook_url: document.getElementById('n8n-webhook-url').value,
+    n8n_trigger_keyword: document.getElementById('n8n-trigger-keyword').value,
+  });
+  if (result?.success) {
+    document.getElementById('n8n-api-key').value = '';
+    toast('n8n settings saved');
+    loadN8nWorkflows();
+  }
+}
+
+async function loadN8nWorkflows() {
+  const box = document.getElementById('n8n-workflows');
+  if (!box) return;
+  box.textContent = 'Loading workflows...';
+  const data = await api('GET', '/api/admin/n8n/workflows');
+  if (!data?.success) {
+    box.textContent = data?.error || 'Could not load workflows. Check n8n URL/API key.';
+    return;
+  }
+  const workflows = data.workflows || [];
+  if (!workflows.length) {
+    box.textContent = 'No workflows found yet.';
+    return;
+  }
+  box.innerHTML = workflows.slice(0, 20).map(w => `
+    <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #1b2731">
+      <span>${w.name || w.id || 'Untitled workflow'}</span>
+      <span class="tag ${w.active ? 'tag-green' : 'tag-amber'}">${w.active ? 'Active' : 'Inactive'}</span>
+    </div>
+  `).join('');
+}
+
+async function testN8nWebhook() {
+  const resultBox = document.getElementById('n8n-test-result');
+  resultBox.textContent = 'Sending test trigger...';
+  const data = await api('POST', '/api/admin/n8n/trigger', {
+    message: document.getElementById('n8n-test-message').value || 'Test from MNI Automation Manager',
+  });
+  resultBox.textContent = JSON.stringify(data || {success:false}, null, 2);
+  if (data?.success) toast('n8n workflow triggered');
+}
+
+// ── Platform Integration ──────────────────────────────────────
+async function loadPlatformTokens() {
+  const d = await api('GET','/api/admin/platform-tokens');
+  if (!d) return;
+  const storedBackendUrl = d.backend_url || '';
+  const shouldUseCurrentOrigin = !storedBackendUrl || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(storedBackendUrl);
+  document.getElementById('tg-token').value  = d.telegram_token    || '';
+  document.getElementById('dc-token').value  = d.discord_token     || '';
+  document.getElementById('wa-token').value  = d.whatsapp_token    || '';
+  document.getElementById('wa-phone-id').value = d.whatsapp_phone_id || '';
+  document.getElementById('ig-token').value  = d.instagram_token   || '';
+  document.getElementById('meta-verify').value = d.meta_verify_token || 'mni-verify-token';
+  document.getElementById('backend-url').value = shouldUseCurrentOrigin ? window.location.origin : storedBackendUrl;
+  document.getElementById('google-client-id').value = d.google_client_id || '';
+  document.getElementById('google-client-secret').value = d.google_client_secret || '';
+  document.getElementById('google-refresh-token').value = d.google_refresh_token || '';
+  document.getElementById('email-smtp-host').value = d.email_smtp_host || '';
+  document.getElementById('email-smtp-port').value = d.email_smtp_port || '587';
+  document.getElementById('email-smtp-username').value = d.email_smtp_username || '';
+  document.getElementById('email-smtp-password').value = d.email_smtp_password || '';
+  document.getElementById('email-from').value = d.email_from || '';
+  document.getElementById('database-url').value = d.database_url || '';
+  document.getElementById('database-label').value = d.database_label || '';
+  document.getElementById('database-ssl-mode').value = d.database_ssl_mode || '';
+  document.getElementById('database-status-note').innerHTML = `
+    Active mode: <strong>${d.database_mode || 'unknown'}</strong> |
+    Source: <strong>${d.database_source || 'unknown'}</strong><br>
+    Saved URL: <code>${d.database_url_masked || 'not set'}</code><br>
+    ${d.database_env_override ? 'Environment `DATABASE_URL` abhi priority me hai, isliye saved URL next restart par bhi tabhi chalega jab env override hata diya jaye.' : 'Saved URL next app restart par use ho sakta hai.'}
+  `;
+  updateWebhookURLs();
+}
+
+function updateWebhookURLs() {
+  const base = document.getElementById('backend-url').value.replace(/\/+$/, '') || window.location.origin;
+  document.getElementById('tg-webhook').textContent = `${base}/api/platforms/webhook/telegram`;
+  document.getElementById('dc-webhook').textContent = `${base}/api/platforms/webhook/discord`;
+  document.getElementById('wa-webhook').textContent = `${base}/api/platforms/webhook/whatsapp`;
+  document.getElementById('ig-webhook').textContent = `${base}/api/platforms/webhook/instagram`;
+}
+
+async function savePlatformTokens() {
+  const body = {
+    telegram_token:           document.getElementById('tg-token').value,
+    discord_token:            document.getElementById('dc-token').value,
+    whatsapp_access_token:    document.getElementById('wa-token').value,
+    whatsapp_phone_number_id: document.getElementById('wa-phone-id').value,
+    instagram_access_token:   document.getElementById('ig-token').value,
+    meta_verify_token:        document.getElementById('meta-verify').value,
+    backend_url:              document.getElementById('backend-url').value,
+    google_client_id:         document.getElementById('google-client-id').value,
+    google_client_secret:     document.getElementById('google-client-secret').value,
+    google_refresh_token:     document.getElementById('google-refresh-token').value,
+    email_smtp_host:          document.getElementById('email-smtp-host').value,
+    email_smtp_port:          document.getElementById('email-smtp-port').value,
+    email_smtp_username:      document.getElementById('email-smtp-username').value,
+    email_smtp_password:      document.getElementById('email-smtp-password').value,
+    email_from:               document.getElementById('email-from').value,
+    database_url:             document.getElementById('database-url').value,
+    database_label:           document.getElementById('database-label').value,
+    database_ssl_mode:        document.getElementById('database-ssl-mode').value,
+  };
+  const r = await api('POST','/api/admin/platform-tokens', body);
+  if (r?.success) {
+    toast('Platform settings saved ✅');
+    loadPlatformTokens();
+    loadMonitorPanel();
+  } else toast('Save failed','err');
+}
+
+function copyText(elId) {
+  const text = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(text).then(() => toast('Copied! 📋'));
+}
+
+function copyElementValue(elId) {
+  const text = (document.getElementById(elId)?.textContent || '').trim();
+  if (!text || text === 'No key generated yet.') {
+    toast('Copy karne ke liye key chahiye','err');
+    return;
+  }
+  navigator.clipboard.writeText(text).then(() => toast('API key copied ✅'));
+}
+
+// ── Features & Platforms ──────────────────────────────────────
+async function loadFeatures() {
+  const f = await api('GET','/api/admin/features');
+  const p = await api('GET','/api/admin/platforms');
+
+  const featureData = [
+    {key:'text',  name:'Text Responses',      desc:'AI chat responses via Claude',          val:f?.text},
+    {key:'image', name:'Image Generation',    desc:'Generate images on request',            val:f?.image},
+    {key:'video', name:'Video Generation',    desc:'Generate videos on request',            val:f?.video},
+    {key:'voice', name:'Voice Generation',    desc:'Male/female voice notes',               val:f?.voice},
+  ];
+  const platformData = [
+    {key:'telegram',  name:'Telegram',  desc:'Telegram bot polling + webhooks',  val:p?.telegram},
+    {key:'discord',   name:'Discord',   desc:'Discord bot with intent listeners', val:p?.discord},
+    {key:'whatsapp',  name:'WhatsApp',  desc:'WhatsApp Business API (Meta)',      val:p?.whatsapp},
+    {key:'instagram', name:'Instagram', desc:'Instagram Messaging API (Meta)',    val:p?.instagram},
+  ];
+
+  document.getElementById('feature-toggles').innerHTML  = featureData.map(renderToggle).join('');
+  document.getElementById('platform-toggles').innerHTML = platformData.map(renderToggle).join('');
+}
+
+function renderToggle(item) {
+  const on = item.val === 'true' || item.val === true;
+  return `
+    <div class="toggle-wrap">
+      <div class="toggle-info">
+        <div class="toggle-name">${item.name}</div>
+        <div class="toggle-desc">${item.desc}</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" ${on?'checked':''} onchange="toggleItem('${item.key}',this.checked)">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>`;
+}
+
+async function toggleItem(key, val) {
+  const features  = ['text','image','video','voice'];
+  const platforms = ['telegram','discord','whatsapp','instagram'];
+  if (features.includes(key))  await api('POST','/api/admin/features',  {[key]: val});
+  if (platforms.includes(key)) await api('POST','/api/admin/platforms', {[key]: val});
+  toast(`${key} ${val?'enabled ✅':'disabled 🚫'}`);
+}
+
+// ── Users ─────────────────────────────────────────────────────
+let userPage = 1;
+function updatePlatformBotEndpointUI() {
+  const platform = document.getElementById('bot-platform')?.value || 'telegram';
+  const label = document.getElementById('bot-endpoint-label');
+  const input = document.getElementById('bot-target-url');
+  if (!label || !input) return;
+  if (platform === 'telegram') {
+    label.textContent = 'Webhook URL';
+    input.placeholder = 'https://your-public-backend.example.com/api/platforms/webhook/telegram';
+    return;
+  }
+  label.textContent = 'Target URL';
+  input.placeholder = 'https://target-or-webhook.example.com';
+}
+
+async function loadUsers(page=1) {
+  userPage = page;
+  const q   = document.getElementById('user-search')?.value || '';
+  const d   = await api('GET',`/api/admin/users?page=${page}&q=${q}`);
+  const tbl = document.getElementById('users-table');
+  if (!d || !d.users.length) {
+    tbl.innerHTML = '<tr><td colspan="6" style="color:#555570">No users found.</td></tr>';
+    return;
+  }
+  tbl.innerHTML = d.users.map(u => `
+    <tr>
+      <td style="font-size:11px;color:#555570">${u.user_id}</td>
+      <td>${u.username}</td>
+      <td><span class="tag tag-blue">${u.platform}</span></td>
+      <td style="font-size:11px;color:#555570">${new Date(u.last_seen).toLocaleString()}</td>
+      <td><span class="tag ${u.is_blocked?'tag-red':'tag-green'}">${u.is_blocked?'Blocked':'Active'}</span></td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="appendAdminIdentity('${String(u.user_id).replace(/'/g, '&#39;')}','${String(u.username || '').replace(/'/g, '&#39;')}','${String(u.platform || '').replace(/'/g, '&#39;')}')">Add Admin</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillGrantPlatformAdmin('${String((u.platform ? `${u.platform}:` : '') + (u.username || u.user_id)).replace(/'/g, '&#39;')}')">Grant Role</button>
+        <button class="btn btn-sm btn-outline" onclick="appendSuperAdminIdentity('${String((u.platform ? `${u.platform}:` : '') + (u.username || u.user_id)).replace(/'/g, '&#39;')}')">Super Admin</button>
+        ${u.is_blocked
+          ? `<button class="btn btn-sm btn-success" onclick="unblockUser(${u.id})">Unblock</button>`
+          : `<button class="btn btn-sm btn-danger"  onclick="blockUser(${u.id})">Block</button>`}
+      </td>
+    </tr>`).join('');
+
+  // Pagination
+  const pg = document.getElementById('user-pagination');
+  pg.innerHTML = '';
+  for (let i=1; i<=d.pages; i++) {
+    const b = document.createElement('button');
+    b.className = 'btn btn-sm ' + (i===page?'btn-primary':'btn-outline');
+    b.textContent = i;
+    b.onclick = () => loadUsers(i);
+    pg.appendChild(b);
+  }
+}
+
+function searchUsers() { loadUsers(1); }
+
+function appendAdminIdentity(userId, username, platform) {
+  const field = document.getElementById('admin-identities');
+  if (!field) {
+    toast('Control Center me admin list available hai', 'err');
+    return;
+  }
+  const entries = field.value.split(/\n|,/).map(item => item.trim()).filter(Boolean);
+  const candidates = [
+    username || '',
+    (platform && username) ? `${platform}:${username}` : '',
+    (platform && userId) ? `${platform}:${userId}` : (userId || '')
+  ].filter(Boolean);
+  candidates.forEach(item => {
+    if (!entries.some(existing => existing.toLowerCase() === item.toLowerCase())) {
+      entries.push(item);
+    }
+  });
+  field.value = entries.join('\n');
+  renderAdminRegistrations(entries);
+  api('POST', '/api/admin/control/admin-identities/add', {
+    user_id: userId,
+    username,
+    platform,
+    identity: username || userId,
+  }).then((result) => {
+    if (result?.success) {
+      field.value = (result.admin_identities || []).join('\n');
+      renderAdminRegistrations(result.admin_identities || []);
+      toast(`${username || userId} admin list me add ho gaya`);
+    }
+  });
+}
+
+function appendSuperAdminIdentity(identity) {
+  const field = document.getElementById('super-admin-identities');
+  if (!field) return;
+  const entries = field.value.split(/\n|,/).map(item => item.trim()).filter(Boolean);
+  if (!entries.some(item => item.toLowerCase() === String(identity || '').trim().toLowerCase())) {
+    entries.push(identity);
+  }
+  field.value = entries.join('\n');
+  toast(`${identity} super admin list me add ho gaya`);
+}
+
+function prefillGrantPlatformAdmin(identity) {
+  document.getElementById('grant-admin-identity').value = identity || '';
+  showPanel('control');
+}
+
+async function removeAdminIdentity(identity) {
+  if (!identity) return;
+  const result = await api('POST', '/api/admin/control/admin-identities/remove', {identity});
+  if (!result?.success) return;
+  const entries = result.admin_identities || [];
+  const field = document.getElementById('admin-identities');
+  if (field) field.value = entries.join('\n');
+  renderAdminRegistrations(entries);
+  toast(`${identity} admin list se remove ho gaya`);
+}
+
+async function blockUser(id) {
+  const reason = prompt('Block reason (optional):') || 'Blocked by admin';
+  const r = await api('POST',`/api/admin/users/${id}/block`,{reason});
+  if (r?.success) { toast('User blocked 🚫'); loadUsers(userPage); }
+}
+
+async function unblockUser(id) {
+  const r = await api('POST',`/api/admin/users/${id}/unblock`);
+  if (r?.success) { toast('User unblocked ✅'); loadUsers(userPage); }
+}
+
+// ── Logs ──────────────────────────────────────────────────────
+async function loadLogs() {
+  const pf  = document.getElementById('log-platform-filter').value;
+  const d   = await api('GET',`/api/admin/messages?platform=${pf}`);
+  const tbl = document.getElementById('logs-table');
+  if (!d || !d.messages.length) {
+    tbl.innerHTML = '<tr><td colspan="6" style="color:#555570">No messages yet.</td></tr>';
+    return;
+  }
+  tbl.innerHTML = d.messages.map(m => `
+    <tr>
+      <td style="font-size:11px;color:#555570;white-space:nowrap">${new Date(m.timestamp).toLocaleString()}</td>
+      <td><span class="tag tag-blue">${m.platform}</span></td>
+      <td style="font-size:11px">${m.username}</td>
+      <td><span class="tag tag-purple">${m.message_type}</span></td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${m.content}">${m.content}</td>
+      <td><span class="tag ${m.status==='ok'?'tag-green':m.status==='blocked'?'tag-red':'tag-amber'}">${m.status}</span></td>
+    </tr>`).join('');
+}
+
+// ── Bot Personalities ─────────────────────────────────────────
+async function loadPersonalities() {
+  const personalities = await api('GET','/api/admin/personalities');
+  const tbody = document.getElementById('personalities-table');
+  if (!personalities?.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#555570">No personalities yet. Create one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = personalities.map(p => `
+    <tr>
+      <td>${p.name}</td>
+      <td>${p.tone || '—'}</td>
+      <td>${p.personality || '—'}</td>
+      <td><span class="tag ${p.is_active?'tag-green':'tag-red'}">${p.is_active?'Active':'Inactive'}</span></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-outline" onclick="activatePersonality(${p.id})">${p.is_active?'Re-apply':'Activate'}</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePersonality(${p.id})">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function createPersonality() {
+  const body = {
+    name: document.getElementById('personality-name').value,
+    role: document.getElementById('personality-role').value,
+    description: document.getElementById('personality-description').value,
+    personality: document.getElementById('personality-description').value,
+    tone: document.getElementById('personality-role').value
+  };
+  if (!body.name) { toast('Name is required','err'); return; }
+  const r = await api('POST','/api/admin/personalities', body);
+  if (r?.success) { toast('Personality created ✅'); loadPersonalities(); }
+  else toast('Failed to create','err');
+}
+
+async function activatePersonality(id) {
+  await api('POST',`/api/admin/personalities/${id}/activate`);
+  loadPersonalities();
+}
+
+async function deletePersonality(id) {
+  if (!confirm('Delete this personality?')) return;
+  await api('DELETE',`/api/admin/personalities/${id}`);
+  loadPersonalities();
+}
+
+// ── Platform Bots ────────────────────────────────────────────
+async function loadPlatformBots() {
+  const bots = await api('GET','/api/admin/platform-bots');
+  platformBotCache = bots || [];
+  const tbody = document.getElementById('platform-bots-table');
+  if (!platformBotCache.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:#555570">No platform bots yet. Add one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = platformBotCache.map(b => `
+    <tr>
+      <td><span class="tag tag-blue">${b.platform}</span></td>
+      <td>${b.name}</td>
+      <td>${b.description || '—'}</td>
+      <td style="font-size:11px;color:#8080a0">${b.target_url || '—'}</td>
+      <td><span class="tag ${b.is_active?'tag-green':'tag-red'}">${b.is_active?'Active':'Inactive'}</span></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-outline" onclick="editPlatformBot(${b.id})">Edit</button>
+        <button class="btn btn-sm btn-outline" onclick="togglePlatformBot(${b.id})">Toggle</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePlatformBot(${b.id})">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function editPlatformBot(id) {
+  const data = platformBotCache.find(item => item.id === id);
+  document.getElementById('bot-id').value = id || data?.id || '';
+  document.getElementById('bot-platform').value = data?.platform || 'telegram';
+  document.getElementById('bot-name').value = data?.name || '';
+  document.getElementById('bot-description').value = data?.description || '';
+  document.getElementById('bot-token').value = '';
+  document.getElementById('bot-target-url').value = data?.target_url || '';
+  updatePlatformBotEndpointUI();
+}
+
+function resetPlatformBotForm() {
+  document.getElementById('bot-id').value = '';
+  document.getElementById('bot-platform').value = 'telegram';
+  document.getElementById('bot-name').value = '';
+  document.getElementById('bot-description').value = '';
+  document.getElementById('bot-token').value = '';
+  document.getElementById('bot-target-url').value = '';
+  updatePlatformBotEndpointUI();
+}
+
+async function savePlatformBot() {
+  const botId = document.getElementById('bot-id').value;
+  const body = {
+    platform: document.getElementById('bot-platform').value,
+    name: document.getElementById('bot-name').value,
+    description: document.getElementById('bot-description').value,
+    bot_token: document.getElementById('bot-token').value,
+    target_url: document.getElementById('bot-target-url').value
+  };
+  if (!body.name) { toast('Bot name is required','err'); return; }
+  const method = botId ? 'PUT' : 'POST';
+  const path = botId ? `/api/admin/platform-bots/${botId}` : '/api/admin/platform-bots';
+  const r = await api(method, path, body);
+  if (r?.success) {
+    toast(botId ? 'Platform bot updated ✅' : 'Platform bot created ✅');
+    resetPlatformBotForm();
+    loadPlatformBots();
+  } else toast('Failed to save','err');
+}
+
+async function togglePlatformBot(id) {
+  await api('POST',`/api/admin/platform-bots/${id}/toggle`);
+  loadPlatformBots();
+}
+
+async function deletePlatformBot(id) {
+  if (!confirm('Delete this platform bot?')) return;
+  await api('DELETE',`/api/admin/platform-bots/${id}`);
+  loadPlatformBots();
+  resetPlatformBotForm();
+}
+
+// ── Moderation Events ────────────────────────────────────────
+async function loadModerationEvents() {
+  const pf = document.getElementById('moderation-platform-filter').value;
+  const events = await api('GET',`/api/admin/moderation-events?platform=${pf}`);
+  const tbody = document.getElementById('moderation-table');
+  if (!events?.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="color:#555570">No moderation events yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = events.map(e => `
+    <tr>
+      <td style="font-size:11px;color:#555570;white-space:nowrap">${new Date(e.created_at).toLocaleString()}</td>
+      <td><span class="tag tag-blue">${e.platform}</span></td>
+      <td style="font-size:11px">${e.username}</td>
+      <td style="font-size:11px;color:#8080a0">${e.chat_id || '—'}</td>
+      <td><span class="tag tag-purple">${e.action}</span></td>
+      <td>${e.reason || '—'}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteModerationEvent(${e.id})">Remove</button></td>
+    </tr>`).join('');
+}
+
+async function deleteModerationEvent(id) {
+  if (!confirm('Is moderation event ko remove karna hai?')) return;
+  const result = await api('DELETE', `/api/admin/moderation-events/${id}`);
+  if (result?.success) {
+    toast('Moderation event removed');
+    loadModerationEvents();
+  }
+}
+
+// ── Outreach ─────────────────────────────────────────────────
+async function loadOutreach() {
+  await loadContacts();
+  const messages = await api('GET','/api/admin/outreach');
+  const tbody = document.getElementById('outreach-table');
+  if (!messages?.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:#555570">No outreach messages yet. Create one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = messages.map(m => `
+    <tr>
+      <td><span class="tag tag-blue">${m.target_platform}</span></td>
+      <td>${m.message_content}</td>
+      <td style="font-size:11px;color:#555570">${new Date(m.created_at).toLocaleString()}</td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="sendOutreachMessage(${m.id})">Send</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function createOutreachMessage() {
+  const body = {
+    target_platform: document.getElementById('outreach-template-platform').value,
+    message_content: document.getElementById('outreach-content').value
+  };
+  if (!body.message_content) { toast('Message content is required','err'); return; }
+  const r = await api('POST','/api/admin/outreach', body);
+  if (r?.success) { toast('Outreach message created ✅'); loadOutreach(); }
+  else toast('Failed to create','err');
+}
+
+async function sendOutreachMessage(id) {
+  const r = await api('POST',`/api/admin/outreach/${id}/send`);
+  if (r?.success) toast('Outreach message sent ✅');
+  else toast('Failed to send','err');
+}
+
+function clearSelectedContacts() {
+  selectedContacts = [];
+  const count = document.getElementById('selected-contact-count');
+  if (count) count.value = '0 selected';
+  document.querySelectorAll('.contact-checkbox').forEach(box => { box.checked = false; });
+  document.querySelectorAll('.group-member-checkbox').forEach(box => { box.checked = false; });
+}
+
+function syncSelectedContacts() {
+  const count = document.getElementById('selected-contact-count');
+  if (count) count.value = `${selectedContacts.length} selected`;
+}
+
+function toggleContactSelection(platform, userId, username, checked) {
+  const key = `${platform}:${userId}`;
+  if (checked) {
+    if (!selectedContacts.find(item => `${item.platform}:${item.user_id}` === key)) {
+      selectedContacts.push({ platform, user_id: userId, username, message: '', recipient_kind: 'user' });
+    }
+  } else {
+    selectedContacts = selectedContacts.filter(item => `${item.platform}:${item.user_id}` !== key);
+  }
+  syncSelectedContacts();
+}
+
+function setCustomRecipientMessage(platform, userId, value) {
+  const item = selectedContacts.find(entry => entry.platform === platform && entry.user_id === userId);
+  if (item) item.message = value;
+}
+
+async function loadContacts() {
+  const platform = document.getElementById('outreach-platform')?.value || '';
+  const q = document.getElementById('outreach-contact-search')?.value || '';
+  const rows = await api('GET', `/api/admin/contacts?platform=${encodeURIComponent(platform)}&q=${encodeURIComponent(q)}`);
+  contactCache = rows || [];
+  const tbody = document.getElementById('contacts-table');
+  if (!tbody) return;
+  if (!contactCache.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="color:#555570">No known contacts for this platform yet.</td></tr>';
+    await loadOutreachGroups();
+    return;
+  }
+  tbody.innerHTML = contactCache.map(row => `
+    <tr>
+      <td><input class="contact-checkbox" data-key="${row.platform}:${row.user_id}" type="checkbox" style="width:auto" ${selectedContacts.find(item => `${item.platform}:${item.user_id}` === `${row.platform}:${row.user_id}`) ? 'checked' : ''} onchange="toggleContactSelection('${row.platform}','${row.user_id}','${(row.username || '').replace(/'/g, '&#39;')}', this.checked)"></td>
+      <td style="font-size:11px;color:#555570">${row.user_id}</td>
+      <td>${row.username}</td>
+      <td><span class="tag tag-blue">${row.platform}</span></td>
+      <td>${row.message_count || 0}</td>
+      <td style="font-size:11px;color:#555570">${row.last_seen ? new Date(row.last_seen).toLocaleString() : '—'}</td>
+      <td><input type="text" placeholder="optional different message" oninput="setCustomRecipientMessage('${row.platform}','${row.user_id}', this.value)"></td>
+      <td><button class="btn btn-sm btn-outline" onclick="loadContactHistory('${row.platform}','${row.user_id}','${(row.username || '').replace(/'/g, '&#39;')}')">View</button></td>
+    </tr>
+  `).join('');
+  await loadOutreachGroups();
+  syncSelectedContacts();
+}
+
+async function loadContactHistory(platform, userId, username) {
+  const rows = await api('GET', `/api/admin/contacts/${platform}/${encodeURIComponent(userId)}/messages`);
+  const wrap = document.getElementById('contact-history');
+  if (!wrap) return;
+  if (!rows?.length) {
+    wrap.innerHTML = `<div style="color:#555570">No history for ${username || userId}.</div>`;
+    return;
+  }
+  wrap.innerHTML = rows.map(row => `
+    <div style="padding:10px 0;border-bottom:1px solid #1e1e2e">
+      <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:4px">
+        <strong style="color:#e2e2f0">${row.username || userId}</strong>
+        <span style="font-size:11px;color:#555570">${new Date(row.timestamp).toLocaleString()}</span>
+      </div>
+      <div style="font-size:11px;color:#555570;margin-bottom:4px">Chat ID: ${row.chat_id || 'Direct chat'}</div>
+      <div style="color:#c4c4e0;margin-bottom:4px"><strong>User:</strong> ${row.content || ''}</div>
+      <div style="color:#8080a0"><strong>Bot:</strong> ${row.response || '—'}</div>
+    </div>
+  `).join('');
+}
+
+async function sendDirectOutreach() {
+  const message = document.getElementById('outreach-message').value.trim();
+  const recipients = selectedContacts.map(item => ({...item, message: item.message || message}));
+  if (!message && !recipients.some(item => item.message)) { toast('Message likho pehle', 'err'); return; }
+  if (!recipients.length) { toast('At least one contact select karo', 'err'); return; }
+  const messageType = document.getElementById('outreach-message-type').value;
+  const r = await api('POST', '/api/admin/outreach/direct', {
+    message,
+    recipients,
+    as_admin: document.getElementById('outreach-as-admin')?.checked || false,
+    message_type: messageType,
+    voice_gender: document.getElementById('outreach-voice-gender')?.value || 'female',
+    voice_tone: document.getElementById('outreach-voice-tone')?.value || 'soft',
+  });
+  if (!r?.success) {
+    toast(r?.error || 'Send failed', 'err');
+    return;
+  }
+  const sentCount = (r.results || []).filter(item => item.success).length;
+  toast(`${messageType === 'voice' ? 'Voice note' : 'Message'} sent to ${sentCount}/${(r.results || []).length} contacts`);
+  document.getElementById('outreach-message').value = '';
+  clearSelectedContacts();
+}
+
+function selectVisibleContacts() {
+  contactCache.forEach(row => {
+    const key = `${row.platform}:${row.user_id}`;
+    if (!selectedContacts.find(item => `${item.platform}:${item.user_id}` === key)) {
+      selectedContacts.push({
+        platform: row.platform,
+        user_id: row.user_id,
+        username: row.username,
+        message: '',
+        recipient_kind: 'user',
+      });
+    }
+  });
+  document.querySelectorAll('.contact-checkbox').forEach(box => { box.checked = true; });
+  syncSelectedContacts();
+}
+
+async function selectAllPlatformContacts() {
+  const platform = document.getElementById('outreach-platform')?.value || '';
+  const rows = await api('GET', `/api/admin/contacts?platform=${encodeURIComponent(platform)}`);
+  if (!rows?.length) {
+    toast('Is platform par koi contact nahi mila', 'err');
+    return;
+  }
+  rows.forEach(row => {
+    const key = `${row.platform}:${row.user_id}`;
+    if (!selectedContacts.find(item => `${item.platform}:${item.user_id}` === key)) {
+      selectedContacts.push({
+        platform: row.platform,
+        user_id: row.user_id,
+        username: row.username,
+        message: '',
+        recipient_kind: 'user',
+      });
+    }
+  });
+  syncSelectedContacts();
+  loadContacts();
+}
+
+async function selectAllCrossPlatformContacts() {
+  const rows = await api('GET', '/api/admin/contacts');
+  if (!rows?.length) {
+    toast('No contacts found', 'err');
+    return;
+  }
+  rows.forEach(row => {
+    const key = `${row.platform}:${row.user_id}`;
+    if (!selectedContacts.find(item => `${item.platform}:${item.user_id}` === key)) {
+      selectedContacts.push({
+        platform: row.platform,
+        user_id: row.user_id,
+        username: row.username,
+        message: '',
+        recipient_kind: 'user',
+      });
+    }
+  });
+  syncSelectedContacts();
+  loadContacts();
+}
+
+async function loadOutreachGroups() {
+  const platform = document.getElementById('outreach-platform')?.value || '';
+  const rows = await api('GET', `/api/admin/contacts/groups?platform=${encodeURIComponent(platform)}`);
+  outreachGroupCache = rows || [];
+  const select = document.getElementById('outreach-group-select');
+  if (!select) return;
+  select.innerHTML = '<option value="">Select group / scope</option>' + outreachGroupCache.map(row => `
+    <option value="${row.platform}:${row.chat_id}">${row.platform.toUpperCase()} • ${row.chat_title} • ${row.message_count} msgs</option>
+  `).join('');
+}
+
+async function loadGroupMembersForOutreach(selectAll=false) {
+  const selection = document.getElementById('outreach-group-select')?.value || '';
+  const wrap = document.getElementById('contact-history');
+  if (!selection) {
+    if (wrap) wrap.innerHTML = '<div style="font-size:12px;color:#8080a0">Select a group/scope to load members here.</div>';
+    return;
+  }
+  const [platform, ...rest] = selection.split(':');
+  const chatId = rest.join(':');
+  const rows = await api('GET', `/api/admin/contacts/groups/${platform}/${encodeURIComponent(chatId)}/members`);
+  if (!wrap) return;
+  if (!rows?.length) {
+    wrap.innerHTML = '<div style="color:#555570">Is scope ke members abhi record me nahi mile.</div>';
+    return;
+  }
+  wrap.innerHTML = rows.map(row => {
+    const key = `${row.platform}:${row.user_id}`;
+    const checked = selectedContacts.find(item => `${item.platform}:${item.user_id}` === key);
+    return `
+      <label style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #1e1e2e">
+        <input class="group-member-checkbox" type="checkbox" style="width:auto;margin-top:2px" ${checked ? 'checked' : ''} onchange="toggleContactSelection('${row.platform}','${row.user_id}','${(row.username || '').replace(/'/g, '&#39;')}', this.checked)">
+        <span>
+          <strong style="display:block;color:#e2e2f0">${row.username}</strong>
+          <span style="display:block;font-size:11px;color:#8080a0">id=${row.user_id} • msgs=${row.message_count || 0}</span>
+          <span style="display:block;font-size:11px;color:#555570">${row.last_seen ? new Date(row.last_seen).toLocaleString() : '—'}</span>
+        </span>
+      </label>
+    `;
+  }).join('');
+  if (selectAll) {
+    rows.forEach(row => toggleContactSelection(row.platform, row.user_id, row.username, true));
+    loadGroupMembersForOutreach(false);
+  }
+}
+
+// ── Data Agents ──────────────────────────────────────────────
+async function loadDataAgents() {
+  const agents = await api('GET','/api/admin/data-agents');
+  dataAgentCache = agents || [];
+  const tbody = document.getElementById('data-agents-table');
+  if (!dataAgentCache.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:#555570">No data agents yet. Create one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = dataAgentCache.map(a => `
+    <tr>
+      <td>${a.name}</td>
+      <td>${a.role || '—'}</td>
+      <td style="font-size:11px">${a.source_url || '—'}</td>
+      <td><span class="tag tag-purple">${a.mode}</span></td>
+      <td style="font-size:11px;color:#555570">${a.last_status || 'idle'}${a.last_fetched_at ? ` • ${new Date(a.last_fetched_at).toLocaleString()}` : ''}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-outline" onclick="editDataAgent(${a.id})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteDataAgent(${a.id})">Delete</button>
+      </td>
+    </tr>`).join('');
+  renderBulkAgentList();
+}
+
+function editDataAgent(id) {
+  const data = dataAgentCache.find(item => item.id === id);
+  document.getElementById('agent-id').value = id || data?.id || '';
+  document.getElementById('agent-name').value = data?.name || '';
+  document.getElementById('agent-role').value = data?.role || '';
+  document.getElementById('agent-source-url').value = data?.source_url || '';
+  document.getElementById('agent-mode').value = data?.mode || 'wait';
+}
+
+function resetDataAgentForm() {
+  document.getElementById('agent-id').value = '';
+  document.getElementById('agent-name').value = '';
+  document.getElementById('agent-role').value = '';
+  document.getElementById('agent-source-url').value = '';
+  document.getElementById('agent-mode').value = 'wait';
+}
+
+async function saveDataAgent() {
+  const agentId = document.getElementById('agent-id').value;
+  const body = {
+    name: document.getElementById('agent-name').value,
+    role: document.getElementById('agent-role').value,
+    source_url: document.getElementById('agent-source-url').value,
+    mode: document.getElementById('agent-mode').value
+  };
+  if (!body.name) { toast('Agent name is required','err'); return; }
+  const method = agentId ? 'PUT' : 'POST';
+  const path = agentId ? `/api/admin/data-agents/${agentId}` : '/api/admin/data-agents';
+  const r = await api(method, path, body);
+  if (r?.success) {
+    toast(agentId ? 'Data agent updated ✅' : 'Data agent created ✅');
+    resetDataAgentForm();
+    loadDataAgents();
+  } else toast('Failed to save','err');
+}
+
+async function deleteDataAgent(id) {
+  if (!confirm('Delete this data agent?')) return;
+  const r = await api('DELETE', `/api/admin/data-agents/${id}`);
+  if (r?.success) {
+    toast('Data agent deleted');
+    resetDataAgentForm();
+    loadDataAgents();
+  }
+}
+
+function renderBulkAgentList() {
+  const wrap = document.getElementById('data-agent-bulk-list');
+  if (!wrap) return;
+  if (!dataAgentCache.length) {
+    wrap.innerHTML = 'No data agents available.';
+    return;
+  }
+  wrap.innerHTML = dataAgentCache.map(agent => `
+    <label style="display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #2a2a3d;border-radius:10px;background:#0f0f1a">
+      <input type="checkbox" style="width:auto;margin-top:2px" ${bulkAgentSelection.includes(agent.id) ? 'checked' : ''} onchange="toggleBulkAgentSelection(${agent.id}, this.checked)">
+      <span>
+        <strong style="display:block;color:#e2e2f0">${agent.name}</strong>
+        <span style="display:block;font-size:11px;color:#8080a0">${agent.role || 'No role'} • ${agent.mode}</span>
+        <span style="display:block;font-size:11px;color:#555570">${agent.source_url || 'No source URL'}</span>
+      </span>
+    </label>
+  `).join('');
+}
+
+function toggleBulkAgentSelection(agentId, checked) {
+  if (checked) {
+    if (!bulkAgentSelection.includes(agentId)) bulkAgentSelection.push(agentId);
+  } else {
+    bulkAgentSelection = bulkAgentSelection.filter(id => id !== agentId);
+  }
+}
+
+function clearBulkAgentSelection() {
+  bulkAgentSelection = [];
+  renderBulkAgentList();
+}
+
+async function bulkAssignDataAgents() {
+  const sourceUrl = document.getElementById('bulk-agent-source-url').value.trim();
+  const mode = document.getElementById('bulk-agent-mode').value;
+  if (!sourceUrl) {
+    toast('Shared source URL required hai', 'err');
+    return;
+  }
+  if (!bulkAgentSelection.length) {
+    toast('At least one data agent select karo', 'err');
+    return;
+  }
+  const result = await api('POST', '/api/admin/data-agents/bulk-assign', {
+    agent_ids: bulkAgentSelection,
+    source_url: sourceUrl,
+    mode,
+  });
+  if (!result?.success) return;
+  toast(`URL ${result.updated_agent_ids?.length || 0} agents ko assign ho gaya`);
+  loadDataAgents();
+}
+
+async function loadControlCenter() {
+  const data = await api('GET', '/api/admin/control');
+  if (data) {
+    document.getElementById('admin-identities').value = data.admin_identities || '';
+    document.getElementById('super-admin-identities').value = data.super_admin_identities || '';
+    document.getElementById('silent-mode-toggle').checked = data.silent_mode === 'true' || data.silent_mode === true;
+    document.getElementById('ai-master-toggle').checked = data.ai_master_enabled === 'true' || data.ai_master_enabled === true;
+    platformAdminRoleCache = data.platform_admin_roles || [];
+    try {
+      bannedScopes = JSON.parse(data.banned_scopes || '[]');
+    } catch (err) {
+      bannedScopes = [];
+    }
+    renderAdminRegistrations((data.admin_identities || '').split(/\n|,/).map(item => item.trim()).filter(Boolean));
+    renderPlatformAdminRoles();
+  }
+  const scopes = await api('GET', '/api/admin/scopes');
+  knownScopes = scopes || [];
+  renderScopes();
+}
+
+async function saveAdminControl() {
+  const r = await api('POST', '/api/admin/control', {
+    admin_identities: document.getElementById('admin-identities').value,
+    super_admin_identities: document.getElementById('super-admin-identities').value,
+    silent_mode: document.getElementById('silent-mode-toggle').checked,
+    ai_master_enabled: document.getElementById('ai-master-toggle').checked,
+    banned_scopes: bannedScopes,
+  });
+  if (r?.success) toast('Admin control saved');
+  else toast('Save failed', 'err');
+}
+
+function renderPlatformAdminRoles() {
+  const tbody = document.getElementById('platform-admin-roles-table');
+  if (!tbody) return;
+  if (!platformAdminRoleCache.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#555570">No delegated platform admins yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = platformAdminRoleCache.map(row => `
+    <tr>
+      <td>${row.identity}</td>
+      <td><span class="tag tag-purple">${row.role}</span></td>
+      <td>${(row.platforms || []).join(', ')}</td>
+      <td>${(row.permissions || []).join(', ')}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="revokePlatformAdmin('${String(row.identity).replace(/'/g, '&#39;')}')">Revoke</button></td>
+    </tr>
+  `).join('');
+}
+
+async function grantPlatformAdmin() {
+  const identity = document.getElementById('grant-admin-identity').value.trim();
+  if (!identity) {
+    toast('Identity likho pehle', 'err');
+    return;
+  }
+  const role = document.getElementById('grant-admin-role').value;
+  const platforms = [document.getElementById('grant-admin-platforms').value];
+  const permissions = document.getElementById('grant-admin-permissions').value.split(',').map(item => item.trim()).filter(Boolean);
+  const result = await api('POST', '/api/admin/control/roles/grant', {identity, role, platforms, permissions});
+  if (!result?.success) return;
+  platformAdminRoleCache = result.platform_admin_roles || [];
+  renderPlatformAdminRoles();
+  document.getElementById('grant-admin-identity').value = '';
+  toast('Platform admin role granted ✅');
+}
+
+async function revokePlatformAdmin(identity) {
+  const result = await api('POST', '/api/admin/control/roles/revoke', {identity});
+  if (!result?.success) return;
+  platformAdminRoleCache = result.platform_admin_roles || [];
+  renderPlatformAdminRoles();
+  toast('Platform admin role removed');
+}
+
+function renderAdminRegistrations(entries) {
+  const tbody = document.getElementById('admin-rules-table');
+  if (!tbody) return;
+  const rows = (entries || []).filter(Boolean);
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td>Registered admins</td><td style="color:#555570">Admin identities field abhi empty hai.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map((item, index) => `
+    <tr>
+      <td>Admin ${index + 1}</td>
+      <td style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+        <span>${item}</span>
+        <button class="btn btn-sm btn-danger" onclick="removeAdminIdentity('${String(item).replace(/'/g, '&#39;')}')">Remove</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function scopeKey(scope) {
+  return `${scope.platform}:${scope.chat_id}`;
+}
+
+function renderScopes() {
+  const tbody = document.getElementById('scope-table');
+  if (!tbody) return;
+  if (!knownScopes.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="color:#555570">Abhi tak kisi platform se known chat/channel logs nahi aaye.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = knownScopes.map(scope => {
+    const key = scopeKey(scope);
+    const blocked = bannedScopes.includes(key);
+    const inviteDisabled = scope.platform !== 'telegram';
+    const leaveDisabled = scope.platform !== 'telegram';
+    const detailsLabel = scope.platform === 'telegram' ? 'Admins' : (scope.platform === 'discord' ? 'Channel' : 'Info');
+    return `
+      <tr>
+        <td><span class="tag tag-blue">${scope.platform}</span></td>
+        <td>${scope.chat_title || 'Untitled Chat'}</td>
+        <td style="font-size:11px;color:#555570">${scope.chat_id}</td>
+        <td>${scope.message_count || 0}</td>
+        <td style="font-size:11px;color:#555570">${scope.last_seen ? new Date(scope.last_seen).toLocaleString() : '—'}</td>
+        <td><button class="btn btn-sm ${blocked ? 'btn-success' : 'btn-danger'}" onclick="toggleScopeBan('${key}')">${blocked ? 'Unblock' : 'Block'}</button></td>
+        <td><button class="btn btn-sm btn-outline" ${inviteDisabled ? 'disabled title="Invite sirf Telegram groups ke liye supported hai"' : `onclick="createScopeInvite('${scope.platform}','${scope.chat_id}')"`}>Invite</button></td>
+        <td><button class="btn btn-sm btn-outline" onclick="loadScopeAdmins('${scope.platform}','${scope.chat_id}','${(scope.chat_title || '').replace(/'/g, '&#39;')}')">${detailsLabel}</button></td>
+        <td><button class="btn btn-sm btn-outline" ${leaveDisabled ? 'disabled title="Leave abhi sirf Telegram groups ke liye supported hai"' : `onclick="leaveScope('${scope.platform}','${scope.chat_id}')"`}>Leave</button></td>
+        <td><button class="btn btn-sm btn-danger" onclick="removeScope('${scope.platform}','${scope.chat_id}')">Remove</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function toggleScopeBan(key) {
+  if (bannedScopes.includes(key)) {
+    bannedScopes = bannedScopes.filter(item => item !== key);
+  } else {
+    bannedScopes.push(key);
+  }
+  const r = await api('POST', '/api/admin/control', { banned_scopes: bannedScopes });
+  if (r?.success) {
+    toast(bannedScopes.includes(key) ? 'Group blocked' : 'Group unblocked');
+    renderScopes();
+  } else {
+    toast('Scope update failed', 'err');
+  }
+}
+
+async function leaveScope(platform, chatId) {
+  if (!confirm(`Bot ko ${chatId} group se nikalna hai?`)) return;
+  const r = await api('POST', '/api/admin/scopes/leave', { platform, chat_id: chatId });
+  if (r?.success) {
+    toast('Bot left the group');
+    knownScopes = knownScopes.filter(scope => !(scope.platform === platform && scope.chat_id === chatId));
+    renderScopes();
+  } else {
+    toast(r?.error || 'Leave failed', 'err');
+  }
+}
+
+async function removeScope(platform, chatId) {
+  if (!confirm(`Group ${chatId} ko control panel se remove karna hai? Bot leave bhi try karega.`)) return;
+  const r = await api('POST', '/api/admin/scopes/remove', { platform, chat_id: chatId });
+  if (r?.success) {
+    toast('Group removed');
+    bannedScopes = bannedScopes.filter(item => item !== `${platform}:${chatId}`);
+    knownScopes = knownScopes.filter(scope => !(scope.platform === platform && scope.chat_id === chatId));
+    renderScopes();
+  } else {
+    toast(r?.error || 'Remove failed', 'err');
+  }
+}
+
+async function createScopeInvite(platform, chatId) {
+  const r = await api('POST', '/api/admin/scopes/invite', { platform, chat_id: chatId });
+  if (r?.success && r.invite_link) {
+    await navigator.clipboard.writeText(r.invite_link).catch(() => {});
+    toast('Invite link ready and copied');
+    alert(`Invite link:\n${r.invite_link}`);
+  } else {
+    toast(r?.error || 'Invite create failed', 'err');
+  }
+}
+
+async function loadScopeAdmins(platform, chatId, chatTitle) {
+  const wrap = document.getElementById('scope-admins');
+  wrap.innerHTML = 'Loading admins...';
+  const r = await api('GET', `/api/admin/scopes/admins?platform=${encodeURIComponent(platform)}&chat_id=${encodeURIComponent(chatId)}`);
+  if (!r?.success) {
+    wrap.innerHTML = `<div style="color:#fca5a5">${r?.error || 'Admin list load failed'}</div>`;
+    return;
+  }
+  const admins = r.admins || [];
+  if (!admins.length) {
+    wrap.innerHTML = `<div style="color:#555570">No details found for ${chatTitle || chatId}.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div style="margin-bottom:10px;color:#e2e2f0"><strong>${chatTitle || 'Platform Scope'}</strong> (${chatId})</div>
+    ${admins.map(admin => `
+      <div style="padding:10px 0;border-bottom:1px solid #1e1e2e">
+        <div style="color:#e2e2f0">${admin.name || admin.username || admin.user_id}</div>
+        <div style="font-size:11px;color:#555570">ID: ${admin.user_id}${admin.username ? ` | @${admin.username}` : ''}</div>
+        <div style="font-size:11px;color:#8080a0">Status: ${admin.status}${admin.is_bot ? ' | bot' : ''}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ── Form Submissions ─────────────────────────────────────────
+async function loadFormSubmissions() {
+  const forms = await api('GET','/api/admin/form-submissions');
+  const tbody = document.getElementById('forms-table');
+  if (!forms?.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:#555570">No form submissions yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = forms.map(f => `
+    <tr>
+      <td>${f.name || '—'}</td>
+      <td style="font-size:11px">${f.email || '—'}</td>
+      <td>${f.message || '—'}</td>
+      <td style="font-size:11px;color:#555570">${new Date(f.created_at).toLocaleString()}</td>
+    </tr>`).join('');
+}
+
+// ── Email Logs ──────────────────────────────────────────────
+async function loadEmailLogs() {
+  const logs = await api('GET','/api/admin/email-logs');
+  const tbody = document.getElementById('emails-table');
+  if (!logs?.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:#555570">No email logs yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = logs.map(l => `
+    <tr>
+      <td style="font-size:11px">${l.recipients || '—'}</td>
+      <td>${l.subject}</td>
+      <td><span class="tag ${l.status==='sent'?'tag-green':'tag-red'}">${l.status}</span></td>
+      <td style="font-size:11px;color:#555570">${new Date(l.created_at).toLocaleString()}</td>
+    </tr>`).join('');
+}
+
+async function sendTestEmail() {
+  const recipients = document.getElementById('email-test-recipients').value.trim();
+  const subject = document.getElementById('email-test-subject').value.trim();
+  const body = document.getElementById('email-test-body').value.trim();
+  if (!recipients || !subject || !body) {
+    toast('Recipients, subject aur body required hai', 'err');
+    return;
+  }
+  const result = await api('POST', '/api/admin/email/send-test', { recipients, subject, body });
+  if (result?.success) {
+    toast('Test email sent ✅');
+    loadEmailLogs();
+  } else {
+    toast(result?.error || 'Email send failed', 'err');
+    loadEmailLogs();
+  }
+}
+
+// ── Appointments ────────────────────────────────────────────
+async function loadAppointments() {
+  const apps = await api('GET','/api/admin/appointments');
+  const tbody = document.getElementById('appointments-table');
+  if (!apps?.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#555570">No appointments yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = apps.map(a => `
+    <tr>
+      <td>${a.username || '—'}</td>
+      <td style="font-size:11px">${a.user_id || '—'}</td>
+      <td style="font-size:11px;color:#555570">${new Date(a.scheduled_for).toLocaleString()}</td>
+      <td><span class="tag tag-blue">${a.status}</span></td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="updateAppointmentStatus(${a.id}, 'confirmed')">Confirm</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function updateAppointmentStatus(id, status) {
+  await api('POST',`/api/admin/appointments/${id}/status`, {status});
+  loadAppointments();
+}
+
+// ── Availability Rules ──────────────────────────────────────
+async function loadAvailabilityRules() {
+  const rules = await api('GET','/api/admin/availability-rules');
+  const tbody = document.getElementById('availability-table');
+  if (!rules?.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:#555570">No availability rules set.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rules.map(r => `
+    <tr>
+      <td>${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][r.weekday] || r.weekday}</td>
+      <td>${r.start_time}</td>
+      <td>${r.end_time}</td>
+      <td><span class="tag ${r.is_enabled?'tag-green':'tag-red'}">${r.is_enabled?'Available':'Unavailable'}</span></td>
+    </tr>`).join('');
+}
+
+// ── Init ──────────────────────────────────────────────────────
+const initialPanel = new URLSearchParams(window.location.search).get('panel');
+verifySession().then((ok) => {
+  if (!ok) return;
+  restoreDrawerState();
+  bindCommandComposer();
+  updatePlatformBotEndpointUI();
+  if (initialPanel && PANELS[initialPanel]) {
+    showPanel(initialPanel);
+    loadStats();
+  } else {
+    loadStats();
+  }
+  updateWebhookURLs();
+});
+</script>
+</body>
+</html>

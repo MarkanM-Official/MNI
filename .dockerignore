@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.venv
+node_modules
+instance
+*.db
+*.sqlite
+*.sqlite3
+__pycache__
+*.pyc
+*.log
+config/google_auth.json
+.git
+.github

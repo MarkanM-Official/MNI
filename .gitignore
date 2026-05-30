@@ -1,0 +1,17 @@
+.env
+.env.local
+.env.*.local
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.log
+*.db
+*.sqlite
+*.sqlite3
+instance/*.db
+instance/deployment_settings.json
+backend/instance/*.db
+config/google_auth.json
+.DS_Store

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MNI Automation Manager</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{--bg:#f5f7fb;--panel:#ffffff;--text:#17212b;--muted:#667789;--line:#dce5ef;--soft:#eef4f8;--brand:#1868db;--brand-2:#14a38b;--danger:#c2410c;--ok:#15803d}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:var(--bg);font-family:Inter,'Segoe UI',system-ui,sans-serif;color:var(--text);display:grid;place-items:center;padding:24px}
+  .shell{width:100%;max-width:980px;display:grid;grid-template-columns:.95fr 1.05fr;gap:18px;align-items:stretch}
+  .intro,.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px rgba(36,54,76,.08)}
+  .intro{padding:34px;display:flex;flex-direction:column;justify-content:center;min-height:560px}
+  .mark{width:54px;height:54px;border-radius:14px;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:grid;place-items:center;color:#fff;font-size:22px;font-weight:900;margin-bottom:18px}
+  h1{font-size:34px;line-height:1.05;letter-spacing:0;margin-bottom:12px}
+  .lead{font-size:15px;color:var(--muted);line-height:1.65;max-width:420px}
+  .steps{display:none;gap:10px;margin-top:28px}
+  .step{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fbfdff}
+  .num{width:24px;height:24px;border-radius:999px;background:#e8f1ff;color:var(--brand);display:grid;place-items:center;font-size:12px;font-weight:900;flex:0 0 auto}
+  .step b{display:block;font-size:13px;margin-bottom:2px}
+  .step span{display:block;font-size:12px;color:var(--muted);line-height:1.45}
+  .card{padding:26px}
+  .topline{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:20px}
+  .title{font-size:22px;font-weight:900}
+  .pill{font-size:12px;color:#0f766e;background:#dcfce7;border:1px solid #bbf7d0;border-radius:999px;padding:6px 10px;font-weight:800}
+  .tabs{display:none;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:18px}
+  .tab{border:1px solid var(--line);background:var(--soft);color:var(--muted);border-radius:10px;padding:10px;font-size:13px;font-weight:850;cursor:pointer}
+  .tab.active{background:#e8f1ff;border-color:#aac7f4;color:var(--brand)}
+  .tab.hidden{display:none}
+  .tabs.single{grid-template-columns:1fr}
+  .section{display:none}
+  .section.active{display:block}
+  label{display:block;font-size:12px;color:var(--muted);font-weight:850;margin:14px 0 7px;text-transform:uppercase;letter-spacing:.04em}
+  input,select{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text);font-size:15px;padding:12px 13px;outline:none}
+  input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(24,104,219,.12)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .hint{font-size:12px;color:var(--muted);line-height:1.55;margin-top:8px}
+  .callout{border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;border-radius:10px;padding:12px;font-size:13px;line-height:1.55;margin:12px 0}
+  .btn{width:100%;border:none;border-radius:10px;background:var(--brand);color:#fff;font-size:15px;font-weight:900;padding:13px;margin-top:18px;cursor:pointer}
+  .btn.secondary{background:#102a43}
+  .google-box{display:none;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px;background:#fbfdff}
+  .google-box.active{display:block}
+  .google-fallback{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;color:#5f7480;font-size:15px;font-weight:900;padding:12px;cursor:not-allowed}
+  .msg{display:none;margin-top:12px;border-radius:10px;padding:11px 12px;font-size:13px;line-height:1.45}
+  .msg.err{display:block;background:#fff7ed;border:1px solid #fed7aa;color:var(--danger)}
+  .msg.ok{display:block;background:#ecfdf5;border:1px solid #bbf7d0;color:var(--ok)}
+  .footer{font-size:12px;color:var(--muted);margin-top:18px;text-align:center}
+  @media(max-width:860px){.shell{grid-template-columns:1fr}.intro{min-height:auto}.grid2,.tabs{grid-template-columns:1fr}h1{font-size:28px}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section class="intro">
+    <div>
+      <div class="mark">M</div>
+      <h1>MNI Automation Manager</h1>
+      <p class="lead">Sign in to manage your AI bot, channels, automations, and knowledge sources.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="topline">
+      <div class="title" id="form-title">Checking setup...</div>
+      <div class="pill" id="mode-pill">Local</div>
+    </div>
+
+    <div id="setup-form" class="section">
+      <div class="callout">First open only: enter default access, then choose how future admin login should work.</div>
+      <div class="grid2">
+        <div>
+          <label>Default Username</label>
+          <input id="bootstrap-username" value="admin">
+        </div>
+        <div>
+          <label>Default Password</label>
+          <input id="bootstrap-password" value="admin@123@321" type="password">
+        </div>
+      </div>
+      <label>Future Login Method</label>
+      <select id="setup-auth-method" onchange="syncSetupFields()">
+        <option value="password">Password only</option>
+        <option value="google_oauth">Google button login</option>
+        <option value="password_google_oauth">Password + Google button</option>
+      </select>
+      <label>Admin Username</label>
+      <input id="setup-username" value="admin">
+      <div id="setup-password-wrap">
+        <label>New Admin Password</label>
+        <input id="setup-password" type="password" placeholder="Create permanent password">
+      </div>
+      <div id="setup-google-oauth-wrap">
+        <label>Google Client ID</label>
+        <input id="setup-google-client-id" placeholder="Paste OAuth Client ID from Google Cloud Console">
+        <label>Allowed Google Emails</label>
+        <input id="setup-google-allowed-emails" placeholder="you@example.com, team@example.com">
+        <p class="hint">Required for security. Only these Google emails can login, so random Google accounts cannot enter your admin panel.</p>
+      </div>
+      <p class="hint">Google login ke liye Client ID public hota hai. Client Secret yahan nahi chahiye.</p>
+      <button class="btn" onclick="registerAdmin()">Create MNI Admin</button>
+      <div id="setup-msg" class="msg"></div>
+    </div>
+
+    <div id="login-form" class="section">
+      <div class="tabs">
+        <button class="tab active" data-provider="password" onclick="setLoginProvider('password')">Password</button>
+        <button class="tab" data-provider="google_oauth" onclick="setLoginProvider('google_oauth')">Google</button>
+      </div>
+      <div id="login-username-wrap">
+        <label>Admin Username</label>
+        <input id="login-username" value="admin">
+      </div>
+      <div id="login-password-wrap">
+        <label>Password</label>
+        <input id="password" type="password" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <div id="google-signin-wrap" class="google-box">
+        <div id="google-signin-button"></div>
+        <button id="google-fallback-button" class="google-fallback" type="button" disabled>Continue with Google</button>
+        <p class="hint">Admin ne Client ID aur allowed email ek baar set kiya hota hai. Yahan sirf apna Google account choose karo.</p>
+      </div>
+      <p class="hint" id="login-hint">Use the access method selected in Settings.</p>
+      <button class="btn secondary" onclick="login()">Open Manager</button>
+      <div id="login-msg" class="msg"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+let loginProvider = 'password';
+let authSettings = {};
+let googleRendered = false;
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function message(id, text, type='err') {
+  const el = document.getElementById(id);
+  el.className = `msg ${type}`;
+  el.textContent = text;
+}
+
+function clearMessage(id) {
+  const el = document.getElementById(id);
+  el.className = 'msg';
+  el.textContent = '';
+}
+
+function methodNeedsPassword(method) {
+  return ['password','password_google_oauth'].includes(method);
+}
+
+function methodNeedsGoogleOAuth(method) {
+  return ['google_oauth','password_google_oauth'].includes(method);
+}
+
+function syncSetupFields() {
+  const method = document.getElementById('setup-auth-method').value;
+  document.getElementById('setup-password-wrap').style.display = methodNeedsPassword(method) ? 'block' : 'none';
+  document.getElementById('setup-google-oauth-wrap').style.display = methodNeedsGoogleOAuth(method) ? 'block' : 'none';
+}
+
+function setLoginProvider(provider) {
+  loginProvider = provider;
+  const method = authSettings.auth_method || 'password';
+  const showGoogle = methodNeedsGoogleOAuth(method);
+  const showPassword = methodNeedsPassword(method);
+  const passwordTab = document.querySelector('.tab[data-provider="password"]');
+  const googleTab = document.querySelector('.tab[data-provider="google_oauth"]');
+  const tabs = document.querySelector('.tabs');
+  if (passwordTab) passwordTab.classList.toggle('hidden', !showPassword);
+  if (googleTab) googleTab.classList.toggle('hidden', !showGoogle);
+  if (tabs) tabs.classList.toggle('single', !(showPassword && showGoogle));
+  document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('active', btn.dataset.provider === provider));
+  document.getElementById('google-signin-wrap').classList.toggle('active', showGoogle && provider === 'google_oauth');
+  document.getElementById('login-password-wrap').style.display = showPassword ? 'block' : 'none';
+  document.getElementById('login-username-wrap').style.display = showPassword ? 'block' : 'none';
+  document.querySelector('.btn.secondary').style.display = method === 'google_oauth' ? 'none' : 'block';
+  if (showGoogle && provider === 'google_oauth') renderGoogleButton();
+}
+
+function renderGoogleButton() {
+  const clientId = authSettings.google_login_client_id;
+  const fallback = document.getElementById('google-fallback-button');
+  const holder = document.getElementById('google-signin-button');
+  if (!clientId) {
+    fallback.style.display = 'block';
+    holder.style.display = 'none';
+    fallback.textContent = 'Google login not configured';
+    return;
+  }
+  if (!window.google?.accounts?.id || googleRendered) return;
+  fallback.style.display = 'none';
+  holder.style.display = 'block';
+  google.accounts.id.initialize({
+    client_id: clientId,
+    callback: handleCredentialResponse,
+  });
+  google.accounts.id.renderButton(document.getElementById('google-signin-button'), {
+    theme: 'outline',
+    size: 'large',
+    width: 330,
+  });
+  googleRendered = true;
+}
+
+async function handleCredentialResponse(response) {
+  clearMessage('login-msg');
+  try {
+    const res = await fetch('/api/auth/google-login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        credential: response.credential,
+        username: document.getElementById('login-username').value.trim(),
+        password: document.getElementById('password').value,
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem('keli_token', data.token);
+      window.location.href = '/admin/dashboard';
+    } else {
+      message('login-msg', data.message || 'Google login failed');
+    }
+  } catch(e) {
+    message('login-msg', 'Google login verify nahi ho pa raha.');
+  }
+}
+
+async function initAuthPage() {
+  try {
+    const res = await fetch('/api/auth/setup-status');
+    const data = await res.json();
+    if (!data.setup_complete) {
+      document.getElementById('form-title').textContent = 'First-time setup';
+      document.getElementById('mode-pill').textContent = 'Default unlock';
+      document.getElementById('bootstrap-username').value = data.bootstrap_username || 'admin';
+      document.getElementById('bootstrap-password').value = data.bootstrap_password || 'admin@123@321';
+      showSection('setup-form');
+      syncSetupFields();
+      return;
+    }
+    authSettings = data.settings || {};
+    document.getElementById('form-title').textContent = 'Login to MNI';
+    document.getElementById('mode-pill').textContent = (authSettings.auth_method || 'password').replaceAll('_', ' + ');
+    document.getElementById('login-username').value = authSettings.username || 'admin';
+    document.getElementById('login-hint').textContent = `Current access mode: ${(authSettings.auth_method || 'password').replaceAll('_', ' + ')}`;
+    showSection('login-form');
+    setLoginProvider(methodNeedsGoogleOAuth(authSettings.auth_method) ? 'google_oauth' : 'password');
+    setTimeout(renderGoogleButton, 700);
+  } catch (e) {
+    document.getElementById('form-title').textContent = 'Backend offline';
+    showSection('login-form');
+    message('login-msg', 'Backend se connect nahi ho pa raha.');
+  }
+}
+
+async function login() {
+  clearMessage('login-msg');
+    const body = {
+    username: document.getElementById('login-username').value.trim(),
+    password: document.getElementById('password').value,
+  };
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem('keli_token', data.token);
+      window.location.href = '/admin/dashboard';
+    } else {
+      message('login-msg', data.message || 'Login failed');
+    }
+  } catch(e) {
+    message('login-msg', 'Server error. Backend running hai kya?');
+  }
+}
+
+async function registerAdmin() {
+  clearMessage('setup-msg');
+  const body = {
+    bootstrap_username: document.getElementById('bootstrap-username').value.trim(),
+    bootstrap_password: document.getElementById('bootstrap-password').value,
+    username: document.getElementById('setup-username').value.trim(),
+    password: document.getElementById('setup-password').value,
+    auth_method: document.getElementById('setup-auth-method').value,
+    google_client_id: document.getElementById('setup-google-client-id').value,
+    google_allowed_emails: document.getElementById('setup-google-allowed-emails').value,
+  };
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem('keli_token', data.token);
+      message('setup-msg', 'MNI admin ready. Opening dashboard...', 'ok');
+      setTimeout(() => window.location.href = '/admin/dashboard', 500);
+    } else {
+      message('setup-msg', data.message || 'Setup failed');
+    }
+  } catch (e) {
+    message('setup-msg', 'Server error. Backend running hai kya?');
+  }
+}
+
+initAuthPage();
+window.handleCredentialResponse = handleCredentialResponse;
+</script>
+</body>
+</html>

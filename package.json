@@ -1,0 +1,23 @@
+{
+  "name": "mni-automation-manager",
+  "version": "1.0.0",
+  "description": "MNI Automation Manager — Multi-platform bot layer",
+  "main": "bot/index.js",
+  "scripts": {
+    "setup": "python scripts/setup_local.py --install-deps --install-node",
+    "setup:local": "python scripts/setup_local.py",
+    "start": "node bot/index.js",
+    "dev": "nodemon bot/index.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "discord.js": "^14.15.3",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "form-data": "^4.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

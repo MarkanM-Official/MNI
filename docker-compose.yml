@@ -1,0 +1,25 @@
+services:
+  mni:
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      FLASK_DEBUG: "False"
+      MARKANM_DISABLE_BACKGROUND_WORKERS: "true"
+      DATABASE_URL: sqlite:////app/instance/keli_ai.db
+    volumes:
+      - ./instance:/app/instance
+      - ./config:/app/config
+
+  n8n:
+    image: n8nio/n8n:latest
+    profiles: ["automation"]
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:

@@ -1,0 +1,9 @@
+{
+  "client_id": "",
+  "client_secret": "",
+  "refresh_token": "",
+  "scopes": [
+    "https://www.googleapis.com/auth/meetings.space.created"
+  ],
+  "notes": "Copy this file to config/google_auth.json and fill the OAuth values. The real google_auth.json file is git-ignored."
+}
