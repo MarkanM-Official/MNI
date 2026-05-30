@@ -323,7 +323,6 @@ Use environment variables, ignored local files, or the admin secret store for re
 
 ## License
 
-MIT License.
+This project is licensed under the Apache License 2.0.
 
 Copyright (c) 2026 Raj Singh, founder of MarkanM, and MNI Automation Manager contributors.
-

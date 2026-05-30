@@ -2,6 +2,7 @@
   "name": "mni-automation-manager",
   "version": "1.0.0",
   "description": "MNI Automation Manager — Multi-platform bot layer",
+  "license": "Apache-2.0",
   "main": "bot/index.js",
   "scripts": {
     "setup": "python scripts/setup_local.py --install-deps --install-node",
